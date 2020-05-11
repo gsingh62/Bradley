@@ -1,10 +1,10 @@
 class VisualProcessingUnit {
 
-    fun see() {
-
+    fun see(visualStimuli: VisualStimuli, learningUnit: LearningUnit) {
+        sendToLearningUnit(visualStimuli, learningUnit)
     }
 
-    fun learn() {
-
+    private fun sendToLearningUnit(visualStimuli: VisualStimuli, learningUnit: LearningUnit) {
+        learningUnit.receiveVisualStimuli(visualStimuli)
     }
 }
