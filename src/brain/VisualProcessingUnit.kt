@@ -1,3 +1,7 @@
+package brain
+
+import map.VisualStimuli
+
 class VisualProcessingUnit {
 
     fun see(visualStimuli: VisualStimuli, learningUnit: LearningUnit) {
