@@ -1,3 +1,5 @@
+package agent
+
 class Teacher {
 
 }
