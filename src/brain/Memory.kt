@@ -7,16 +7,14 @@ class Memory {
     companion object {
         val memoryMap = HashMap<MemoryType, MutableList<MemoryInformation>>()
 
-        fun storeNewMemory(memoryType: MemoryType) {
-            val memoryInformationList: MutableList<MemoryInformation> = Collections.emptyList<MemoryInformation>()
-            memoryMap.putIfAbsent(memoryType, memoryInformationList)
-        }
-
-        fun updateMemoryWithInformation(memoryType: MemoryType, memoryInformation: MemoryInformation) {
+        fun storeNewMemory(memoryType: MemoryType, memoryInformation: MemoryInformation) {
             if(!memoryMap.containsKey(memoryType)) {
-                storeNewMemory(memoryType)
+                val memoryInformationList: MutableList<MemoryInformation> = ArrayList()
+                memoryInformationList.add(memoryInformation)
+                memoryMap.put(memoryType, memoryInformationList)
+                return
             }
-            val memoryInformationList: MutableList<MemoryInformation> = memoryMap.get(memoryType)!!
+            val memoryInformationList: MutableList<MemoryInformation> = memoryMap[memoryType]!!
             memoryInformationList.add(memoryInformation)
         }
 

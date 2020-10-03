@@ -4,18 +4,18 @@ import java.util.ArrayList
 class Map(private val nodes: Array<Array<Node>>) {
     companion object {
         fun getMap(): Map {
-            val node00 = Node(0,0)
-            val node01 = Node(0,1)
-            val node02 = Node(0,2)
-            val node03 = Node(0,3)
-            val node10 = Node(1,0)
-            val node11 = Node(1,1)
-            val node12 = Node(1,2)
-            val node13 = Node(1,3)
-            val node20 = Node(2,0)
-            val node21 = Node(2,1)
-            val node22 = Node(2,2)
-            val node23 = Node(2,3)
+            val node00 = Node(0, 0)
+            val node01 = Node(0, 1)
+            val node02 = Node(0, 2)
+            val node03 = Node(0, 3)
+            val node10 = Node(1, 0)
+            val node11 = Node(1, 1)
+            val node12 = Node(1, 2)
+            val node13 = Node(1, 3)
+            val node20 = Node(2, 0)
+            val node21 = Node(2, 1)
+            val node22 = Node(2, 2)
+            val node23 = Node(2, 3)
             val graphStructure = arrayOf(
                     arrayOf(node00, node01, node02, node03),
                     arrayOf(node10, node11, node12, node13),
@@ -23,7 +23,12 @@ class Map(private val nodes: Array<Array<Node>>) {
             )
             return Map(graphStructure)
         }
+
+        fun getFirstNode(): Node {
+            return getMap().nodes[0][0]
+        }
     }
+
 
     fun getVicinity(node: Node): VisualStimuli {
         val nodesLookingUp = ArrayList<Node>()

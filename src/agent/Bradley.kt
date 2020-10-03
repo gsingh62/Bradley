@@ -5,16 +5,15 @@ import brain.LearningUnit
 import brain.Memory
 import brain.VisualProcessingUnit
 import map.Node
+import map.Map
 
 class Bradley {
     var lifeUnits = 10
-    var currentNode =  Node(0,0)
-    companion object {
-        val memory: Memory = Memory()
-        val learningUnit: LearningUnit = LearningUnit(memory)
-        val visualProcessingUnit: VisualProcessingUnit = VisualProcessingUnit()
-        val actionControl: ActionControl = ActionControl()
-    }
+    var currentNode =  Map.getFirstNode()
+    val memory: Memory = Memory()
+    val learningUnit: LearningUnit = LearningUnit(memory)
+    val visualProcessingUnit: VisualProcessingUnit = VisualProcessingUnit()
+    val actionControl: ActionControl = ActionControl()
 
     fun chooseNextMove() {
         // dumb implementation for now, keeps travelling down then left.
