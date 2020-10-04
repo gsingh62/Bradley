@@ -1,54 +1,51 @@
 package map
 
-import exception.ExceptionMessages.Companion.ACTOR_NOT_ON_MAP_EXCEPTION_MESSAGE
-import exception.ExceptionMessages.Companion.HIT_WALL_EXCEPTION_MESSAGE
-import exception.ExceptionMessages.Companion.NO_SUCH_COORDINATE_EXCEPTION_MESSAGE
-import exception.InvalidMoveException
+import exception.ActorNotOnMapException
+import exception.HitWallException
+import exception.PositionNotFoundException
 
 data class Coordinate(val x: Int, val y: Int)
 
 interface WorldMap {
-    fun positionFor(actor: Actor): Coordinate
+    fun positionFor(mapObject: MapObject): Coordinate
     fun getNode(positionFor: Coordinate): Node
-    fun moveObject(actor: Actor, deltax: Int, deltay: Int)
+    fun moveObject(actor: MapObject, deltax: Int, deltay: Int)
 }
 
 class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
-    override fun positionFor(actor: Actor): Coordinate {
+    override fun positionFor(mapObject: MapObject): Coordinate {
         nodes.forEach { (k, v) ->
             if (v is OpenSpaceNode) {
-                if (v.objects.size > 0 && v.objects[0] is Actor) {
-                    val actorInOpenSpaceNode = v.objects[0] as Actor
-                    if (actor == actorInOpenSpaceNode) {
+                if (v.objects.size > 0 ) {
+                    if (mapObject == v.objects[0]) {
                         return k
                     }
                 }
             }
          }
-        throw NoSuchElementException(ACTOR_NOT_ON_MAP_EXCEPTION_MESSAGE)
+        throw ActorNotOnMapException()
     }
 
-    override fun moveObject(actor: Actor, deltax: Int, deltay: Int) {
-        actor.loseOneLifeUnit()
-        val coordinate = positionFor(actor)
+    override fun moveObject(mapObject: MapObject, deltax: Int, deltay: Int) {
+        val coordinate = positionFor(mapObject)
         val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
         val oldPlace = nodes[coordinate]
         val newPlace = nodes[newCoordinate]
         if (newPlace is WallNode) {
-            throw InvalidMoveException(HIT_WALL_EXCEPTION_MESSAGE)
+            throw HitWallException()
 
         } else if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
-            oldPlace.removeObject(actor)
-            newPlace.addObject(actor)
+            oldPlace.removeObject(mapObject)
+            newPlace.addObject(mapObject)
         }
     }
 
     override fun getNode(positionFor: Coordinate): Node {
-        return nodes[positionFor] ?: throw NoSuchElementException(NO_SUCH_COORDINATE_EXCEPTION_MESSAGE)
+        return nodes[positionFor] ?: throw PositionNotFoundException()
     }
 }
 
-class WorldMapBuilder() {
+class WorldMapBuilder {
     private val nodes = mutableMapOf<Coordinate, Node>()
     private lateinit var startingActor: Actor
     private lateinit var exitPosition: Coordinate
@@ -60,7 +57,7 @@ class WorldMapBuilder() {
             val node = when(s[i]) {
                 's' ->  {
                     startingActor = Actor(10)
-                    OpenSpaceNode().apply{addObject(startingActor)}
+                    OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {
                     exitPosition = coordinate

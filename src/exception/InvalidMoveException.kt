@@ -1,4 +1,3 @@
 package exception
 
-class InvalidMoveException(message: String) : Exception(message) {
-}
+open class InvalidMoveException(message: String) : Exception(message)

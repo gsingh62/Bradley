@@ -2,7 +2,7 @@ package functional
 
 import action.Action
 import agent.Player
-import exception.ExceptionMessages
+import exception.HitWallException
 import game.Game
 import map.Actor
 import map.Coordinate
@@ -52,7 +52,7 @@ class TestKeepsGoingUp {
         game.run()
 
         assertNotEquals(map.positionFor(actor), exitPosition)
-        assertThat(player.feedback, equalTo(ExceptionMessages.WALL_FEEDBACK))
+        assertThat(player.feedback, equalTo(HitWallException.HIT_WALL_EXCEPTION_MESSAGE))
     }
 }
 
