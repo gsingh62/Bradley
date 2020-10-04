@@ -1,12 +1,11 @@
 package agent
 
 import action.Action
-import brain.LearningUnit
-import brain.Memory
-import brain.VisualProcessingUnit
-import map.*
+import map.Actor
 
 interface Player {
+    val actor: Actor
+
     fun chooseNextMove(): Action
 }
 

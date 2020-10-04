@@ -14,7 +14,6 @@ class TestEmptyMapBradleyKeepsGoingUpAndWins {
 
     @Test
     fun test() {
-        println("hello world")
         val builder = WorldMapBuilder()
                 .load("""
                     .e.
@@ -25,7 +24,7 @@ class TestEmptyMapBradleyKeepsGoingUpAndWins {
         val exitPosition: Coordinate = builder.getExitPosition()
         val map = builder.build()
 
-        val player = AlwaysGoUpPlayer()
+        val player = AlwaysGoUpPlayer(actor)
         val game = Game(player, map)
 
         game.run()
@@ -36,7 +35,7 @@ class TestEmptyMapBradleyKeepsGoingUpAndWins {
 
 }
 
-class AlwaysGoUpPlayer: Player {
+class AlwaysGoUpPlayer(override val actor: Actor): Player {
     override fun chooseNextMove(): Action {
         return Action.MOVE_NORTH
     }
