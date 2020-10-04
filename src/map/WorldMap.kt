@@ -7,32 +7,23 @@ interface WorldMap {
     fun getNode(positionFor: Coordinate): Node
 }
 
-class ArrayWorldMap(private val nodes: Array<Array<Node>>) : WorldMap {
-    override fun positionFor(actor: Actor): Coordinate {
-        TODO("Not yet implemented")
-    }
-
-    override fun getNode(positionFor: Coordinate): Node {
-        TODO("Not yet implemented")
-    }
-}
-
 class CoordinateNodeWorldMap(private val nodes: Map<Coordinate, Node>) : WorldMap {
     override fun positionFor(actor: Actor): Coordinate {
         nodes.forEach { (k, v) ->
             if (v is OpenSpaceNode) {
                 if (v.objects.size > 0 && v.objects[0] is Actor) {
-                    val actor = v.objects[0] as Actor
-                    return actor.position
+                    val actorInOpenSpaceNode = v.objects[0] as Actor
+                    if (actor == actorInOpenSpaceNode) {
+                        return actor.position
+                    }
                 }
             }
          }
-        // return default
-        return Coordinate(0, 0)
+        throw NoSuchElementException("The provided actor is not in the map.")
     }
 
     override fun getNode(positionFor: Coordinate): Node {
-        return nodes[positionFor]!!
+        return nodes[positionFor] ?: throw NoSuchElementException("The provided coordinate is not valid.")
     }
 }
 
@@ -69,10 +60,6 @@ class WorldMapBuilder() {
 
     fun build(): WorldMap {
         return CoordinateNodeWorldMap(nodes)
-    }
-
-    fun getActor(): Actor {
-        TODO("Not yet implemented")
     }
 
     fun getStartingActor(): Actor {
