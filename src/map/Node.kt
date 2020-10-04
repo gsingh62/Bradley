@@ -2,17 +2,16 @@ package map
 
 interface MapObject {}
 
-class Actor(private val lifeUnits: Int) : MapObject {
+class Actor(private var lifeUnits: Int) : MapObject {
 
     val alive: Boolean
         get() = this.lifeUnits > 0
 
-}
-
-
-interface Node {
+    fun loseOneLifeUnit() { lifeUnits-- }
 
 }
+
+interface Node {}
 
 class ExitNode() : OpenSpaceNode() {}
 
@@ -25,7 +24,6 @@ open class OpenSpaceNode() : Node {
     fun addObject(actor: MapObject) {
         objects.add(actor)
     }
-
 }
 
 class WallNode : Node {}
