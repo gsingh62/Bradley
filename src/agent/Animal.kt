@@ -1,5 +1,5 @@
 package agent
 
-class Animal {
+import map.MapObject
 
-}
+class Animal : MapObject {}

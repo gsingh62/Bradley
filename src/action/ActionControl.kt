@@ -1,8 +1,5 @@
 package action
 
-class ActionControl {
-
-    fun applyAction() {
-
-    }
+enum class Action {
+    MOVE_NORTH
 }
