@@ -1,5 +1,10 @@
 package map
 
+import exception.ExceptionMessages.Companion.ACTOR_NOT_ON_MAP_EXCEPTION_MESSAGE
+import exception.ExceptionMessages.Companion.HIT_WALL_EXCEPTION_MESSAGE
+import exception.ExceptionMessages.Companion.NO_SUCH_COORDINATE_EXCEPTION_MESSAGE
+import exception.InvalidMoveException
+
 data class Coordinate(val x: Int, val y: Int)
 
 interface WorldMap {
@@ -20,23 +25,26 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
                 }
             }
          }
-        throw NoSuchElementException("The provided actor is not in the map.")
+        throw NoSuchElementException(ACTOR_NOT_ON_MAP_EXCEPTION_MESSAGE)
     }
 
     override fun moveObject(actor: Actor, deltax: Int, deltay: Int) {
+        actor.loseOneLifeUnit()
         val coordinate = positionFor(actor)
         val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
         val oldPlace = nodes[coordinate]
         val newPlace = nodes[newCoordinate]
-        if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
+        if (newPlace is WallNode) {
+            throw InvalidMoveException(HIT_WALL_EXCEPTION_MESSAGE)
+
+        } else if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
             oldPlace.removeObject(actor)
             newPlace.addObject(actor)
         }
-
     }
 
     override fun getNode(positionFor: Coordinate): Node {
-        return nodes[positionFor] ?: throw NoSuchElementException("The provided coordinate is not valid.")
+        return nodes[positionFor] ?: throw NoSuchElementException(NO_SUCH_COORDINATE_EXCEPTION_MESSAGE)
     }
 }
 
@@ -58,6 +66,7 @@ class WorldMapBuilder() {
                     exitPosition = coordinate
                     ExitNode()
                 }
+                'X' -> WallNode()
                 ' ' -> continue
                 else -> OpenSpaceNode()
             }
@@ -82,5 +91,4 @@ class WorldMapBuilder() {
     fun getExitPosition(): Coordinate {
         return exitPosition
     }
-
 }
