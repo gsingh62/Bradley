@@ -1,23 +1,38 @@
 package agent
 
-import action.ActionControl
-import brain.LearningUnit
-import brain.Memory
-import brain.VisualProcessingUnit
-import map.Node
-import map.Map
+import action.Action
+import map.Actor
+
+interface Player {
+    val actor: Actor
+
+    fun chooseNextMove(): Action
+}
 
 class Bradley {
-    var lifeUnits = 10
-    var currentNode =  Map.getFirstNode()
-    val memory: Memory = Memory()
-    val learningUnit: LearningUnit = LearningUnit(memory)
-    val visualProcessingUnit: VisualProcessingUnit = VisualProcessingUnit()
-    val actionControl: ActionControl = ActionControl()
 
-    fun chooseNextMove() {
-        // dumb implementation for now, keeps travelling down then left.
-        val previousNode = currentNode
-        currentNode = Node(previousNode.xCoordinate + 1, previousNode.yCoordinate +1)
+//    val api: WorldApiForAgents
+//    val actor: Actor
+    
+//    val memory: Memory = Memory()
+//    val actionControl: ActionControl = ActionControl()
+//    val learningUnit: LearningUnit = LearningUnit(memory, actionControl)
+//    val visualProcessingUnit: VisualProcessingUnit = VisualProcessingUnit()
+
+/*
+    fun chooseNextMove(): Action {
+        visualProcessingUnit.see(getVicinity(), learningUnit)
+        currentNode = learningUnit.takeAction()
+        
     }
+*/
+
+/*    private fun getVicinity(): VisualStimuli {
+        // TODO how to enforce Bradley not being able to observe arbitrary position?
+        return worldApi.getVicinity(actor)
+    }
+
+    fun currentPosition(): Coordinate {
+        return gameEngine.positionFor(actor)
+    }*/
 }

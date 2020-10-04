@@ -1,12 +1,31 @@
 package map
 
-import agent.Animal
-import agent.Teacher
-import java.util.HashSet
+interface MapObject {}
 
-class Node(val xCoordinate: Int, val yCoordinate: Int) {
-    val animals = HashSet<Animal>()
-    val teachers = HashSet<Teacher>()
-    val isBlockingNode: Boolean = false
-    val isEnd: Boolean = false
+class Actor(private val lifeUnits: Int) : MapObject {
+
+    val alive: Boolean
+        get() = this.lifeUnits > 0
+
 }
+
+
+interface Node {
+
+}
+
+class ExitNode() : OpenSpaceNode() {}
+
+open class OpenSpaceNode() : Node {
+    val objects: MutableList<MapObject> = mutableListOf()
+    fun removeObject(actor: MapObject) {
+        objects.remove(actor)
+    }
+
+    fun addObject(actor: MapObject) {
+        objects.add(actor)
+    }
+
+}
+
+class WallNode : Node {}
