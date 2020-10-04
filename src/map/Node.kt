@@ -2,8 +2,7 @@ package map
 
 interface MapObject {}
 
-class Actor(private val lifeUnits: Int,
-            var position: Coordinate) : MapObject {
+class Actor(private val lifeUnits: Int) : MapObject {
 
     val alive: Boolean
         get() = this.lifeUnits > 0

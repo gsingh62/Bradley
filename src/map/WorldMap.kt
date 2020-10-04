@@ -15,7 +15,7 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
                 if (v.objects.size > 0 && v.objects[0] is Actor) {
                     val actorInOpenSpaceNode = v.objects[0] as Actor
                     if (actor == actorInOpenSpaceNode) {
-                        return actor.position
+                        return k
                     }
                 }
             }
@@ -29,7 +29,6 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
         val oldPlace = nodes[coordinate]
         val newPlace = nodes[newCoordinate]
         if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
-            actor.position = newCoordinate
             oldPlace.removeObject(actor)
             newPlace.addObject(actor)
         }
@@ -52,7 +51,7 @@ class WorldMapBuilder() {
             val coordinate = Coordinate(x, y-1)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(10, coordinate)
+                    startingActor = Actor(10)
                     OpenSpaceNode().apply{addObject(startingActor)}
                 }
                 'e' -> {
