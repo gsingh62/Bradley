@@ -11,8 +11,8 @@ class Game(private val player: Player, private val worldMap: WorldMap) {
     private var timeCounter: Int = 0
 
     fun run() {
-        try {
-            while (!Thread.interrupted()) {
+        while (!Thread.interrupted()) {
+            try {
                 player.actor.loseOneLifeUnit()
                 when (player.chooseNextMove()) {
                     Action.MOVE_NORTH -> moveNorthLogic()
@@ -21,9 +21,9 @@ class Game(private val player: Player, private val worldMap: WorldMap) {
                     break
                 }
                 timeCounter++
+            } catch (ex: InvalidMoveException) {
+                player.receiveFeedback(ex.message!!)
             }
-        } catch (ex: InvalidMoveException) {
-            player.receiveFeedback(ex.message!!)
         }
     }
 
