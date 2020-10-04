@@ -1,5 +1,5 @@
 package agent
 
-class Teacher {
+import map.MapObject
 
-}
+class Teacher : MapObject {}
