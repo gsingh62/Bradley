@@ -1,5 +1,7 @@
 package map
 
+import java.lang.UnsupportedOperationException
+
 data class Coordinate(val x: Int, val y: Int)
 
 interface WorldMap {
@@ -28,11 +30,13 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
         val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
         val oldPlace = nodes[coordinate]
         val newPlace = nodes[newCoordinate]
-        if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
+        if (newPlace is WallNode) {
+            throw UnsupportedOperationException("Hit wall node.")
+
+        } else if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
             oldPlace.removeObject(actor)
             newPlace.addObject(actor)
         }
-
     }
 
     override fun getNode(positionFor: Coordinate): Node {
@@ -58,6 +62,7 @@ class WorldMapBuilder() {
                     exitPosition = coordinate
                     ExitNode()
                 }
+                'X' -> WallNode()
                 ' ' -> continue
                 else -> OpenSpaceNode()
             }
@@ -82,5 +87,4 @@ class WorldMapBuilder() {
     fun getExitPosition(): Coordinate {
         return exitPosition
     }
-
 }
