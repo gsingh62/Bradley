@@ -11,23 +11,23 @@ class Game(private val player: Player, private val worldMap: WorldMap) {
     private var timeCounter: Int = 0
 
     fun run() {
-        while(!Thread.interrupted()) {
-            player.actor.loseOneLifeUnit()
-            when (player.chooseNextMove()) {
-                Action.MOVE_NORTH -> moveNorthLogic()
+        try {
+            while (!Thread.interrupted()) {
+                player.actor.loseOneLifeUnit()
+                when (player.chooseNextMove()) {
+                    Action.MOVE_NORTH -> moveNorthLogic()
+                }
+                if (!player.actor.alive || worldMap.getNode(worldMap.positionFor(player.actor)) is ExitNode) {
+                    break
+                }
+                timeCounter++
             }
-            if (!player.actor.alive || worldMap.getNode(worldMap.positionFor(player.actor)) is ExitNode) {
-                break
-            }
-            timeCounter++
+        } catch (ex: InvalidMoveException) {
+            player.receiveFeedback(ex.message!!)
         }
     }
 
     private fun moveNorthLogic() {
-        try {
-            worldMap.moveObject(player.actor, 0, -1)
-        } catch (ex: InvalidMoveException) {
-                player.receiveFeedback(ex.message!!)
-        }
+        worldMap.moveObject(player.actor, 0, -1)
     }
 }
