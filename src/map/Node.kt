@@ -3,7 +3,7 @@ package map
 interface MapObject {}
 
 class Actor(private val lifeUnits: Int,
-            val position: Coordinate) : MapObject {
+            var position: Coordinate) : MapObject {
 
     val alive: Boolean
         get() = this.lifeUnits > 0
@@ -12,11 +12,21 @@ class Actor(private val lifeUnits: Int,
 
 
 interface Node {
+
 }
 
-class ExitNode : Node {}
+class ExitNode() : OpenSpaceNode() {}
 
-class OpenSpaceNode(val objects: MutableList<MapObject>) : Node {
+open class OpenSpaceNode() : Node {
+    val objects: MutableList<MapObject> = mutableListOf()
+    fun removeObject(actor: MapObject) {
+        objects.remove(actor)
+    }
+
+    fun addObject(actor: MapObject) {
+        objects.add(actor)
+    }
+
 }
 
 class WallNode : Node {}

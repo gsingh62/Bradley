@@ -5,9 +5,10 @@ data class Coordinate(val x: Int, val y: Int)
 interface WorldMap {
     fun positionFor(actor: Actor): Coordinate
     fun getNode(positionFor: Coordinate): Node
+    fun moveObject(actor: Actor, deltax: Int, deltay: Int)
 }
 
-class CoordinateNodeWorldMap(private val nodes: Map<Coordinate, Node>) : WorldMap {
+class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
     override fun positionFor(actor: Actor): Coordinate {
         nodes.forEach { (k, v) ->
             if (v is OpenSpaceNode) {
@@ -20,6 +21,19 @@ class CoordinateNodeWorldMap(private val nodes: Map<Coordinate, Node>) : WorldMa
             }
          }
         throw NoSuchElementException("The provided actor is not in the map.")
+    }
+
+    override fun moveObject(actor: Actor, deltax: Int, deltay: Int) {
+        val coordinate = positionFor(actor)
+        val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
+        val oldPlace = nodes[coordinate]
+        val newPlace = nodes[newCoordinate]
+        if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
+            actor.position = newCoordinate
+            oldPlace.removeObject(actor)
+            newPlace.addObject(actor)
+        }
+
     }
 
     override fun getNode(positionFor: Coordinate): Node {
@@ -39,14 +53,14 @@ class WorldMapBuilder() {
             val node = when(s[i]) {
                 's' ->  {
                     startingActor = Actor(10, coordinate)
-                    OpenSpaceNode(mutableListOf(startingActor))
+                    OpenSpaceNode().apply{addObject(startingActor)}
                 }
                 'e' -> {
                     exitPosition = coordinate
                     ExitNode()
                 }
                 ' ' -> continue
-                else -> OpenSpaceNode(mutableListOf())
+                else -> OpenSpaceNode()
             }
             nodes[coordinate] = node
             x++
