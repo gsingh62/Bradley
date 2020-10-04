@@ -5,8 +5,11 @@ import map.Actor
 
 interface Player {
     val actor: Actor
-
+    var feedback: String
     fun chooseNextMove(): Action
+    fun receiveFeedback(feedback: String) {
+        this.feedback = feedback
+    }
 }
 
 class Bradley {
