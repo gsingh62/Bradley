@@ -4,12 +4,19 @@ import exception.ActorNotOnMapException
 import exception.HitWallException
 import exception.PositionNotFoundException
 
-data class Coordinate(val x: Int, val y: Int)
+data class Coordinate(val x: Int, val y: Int) {
+
+    fun add (vector: Vector): Coordinate {
+        return Coordinate(this.x + vector.deltax,this.y + vector.deltay)
+    }
+
+}
+data class Vector (val deltax: Int, val deltay: Int)
 
 interface WorldMap {
     fun positionFor(mapObject: MapObject): Coordinate
     fun getNode(positionFor: Coordinate): Node
-    fun moveObject(actor: MapObject, deltax: Int, deltay: Int)
+    fun moveObject(actor: MapObject, vector: Vector)
 }
 
 class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
@@ -26,9 +33,9 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
         throw ActorNotOnMapException()
     }
 
-    override fun moveObject(mapObject: MapObject, deltax: Int, deltay: Int) {
+    override fun moveObject(mapObject: MapObject, vector: Vector) {
         val coordinate = positionFor(mapObject)
-        val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
+        val newCoordinate = coordinate.add(vector)
         val oldPlace = getNode(coordinate)
         val newPlace = getNode(newCoordinate)
         if (newPlace is WallNode) {
@@ -50,9 +57,9 @@ class WorldMapBuilder {
     private lateinit var exitPosition: Coordinate
     fun load(s: String): WorldMapBuilder {
         var x = 0
-        var y = 0
+        var y = -1
         for (i in s.indices) {
-            val coordinate = Coordinate(x, y-1)
+            val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
                     startingActor = Actor(20)
@@ -64,13 +71,16 @@ class WorldMapBuilder {
                 }
                 'X' -> WallNode()
                 ' ' -> continue
+                '"' -> continue
                 else -> OpenSpaceNode()
             }
-            nodes[coordinate] = node
-            x++
+
             if (s[i] == '\n') {
                 y++
                 x = 0
+            } else {
+                nodes[coordinate] = node
+                x++
             }
         }
         return this

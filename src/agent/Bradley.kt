@@ -1,8 +1,10 @@
 package agent
 
 import action.Action
+import action.Move
 import exception.InvalidMoveException
 import map.Actor
+import map.Vector
 
 interface Player {
     val actor: Actor
@@ -14,21 +16,18 @@ interface Player {
 }
 
 class GeneralPlayer(override val actor: Actor): Player {
+    private val options = listOf(Vector(1,-1), Vector(1,0), Vector(1, 1),
+    Vector(0,1),Vector(-1, 1), Vector(-1, 0), Vector(-1, -1),
+    Vector(0, -1))
     override var feedback: InvalidMoveException? = null
-    private var previousAction: Action? = null
+    private var previousActionIndex = 0
     override fun chooseNextMove(): Action {
-        return if (previousAction == null) {
-            previousAction = Action.MOVE_NORTH
-            previousAction!!
-        } else {
-            if (feedback != null) {
-                feedback = null
-                previousAction = Action.valueOf(previousAction!!.nextDirectionToTry)
-                previousAction!!
-            } else {
-                previousAction!!
-            }
+        if (feedback != null) {
+            feedback = null
+            val newActionIndex = (previousActionIndex + 1) % 8
+            previousActionIndex = newActionIndex
         }
+        return Move(options[previousActionIndex])
     }
 }
 

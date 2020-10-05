@@ -1,6 +1,7 @@
 package functional
 
 import action.Action
+import action.Move
 import agent.GeneralPlayer
 import agent.Player
 import exception.HitWallException
@@ -8,6 +9,7 @@ import exception.InvalidMoveException
 import game.Game
 import map.Actor
 import map.Coordinate
+import map.Vector
 import map.WorldMapBuilder
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -34,7 +36,6 @@ class TestKeepsGoingUp {
         val game = Game(player, map)
 
         game.run()
-
         assertThat(map.positionFor(actor), equalTo(exitPosition))
         assertThat(actor.alive, equalTo(true))
     }
@@ -84,7 +85,7 @@ class AlwaysGoUpPlayer(override val actor: Actor): Player {
     override var feedback: InvalidMoveException? = null
 
     override fun chooseNextMove(): Action {
-        return Action.MOVE_NORTH
+        return Move(Vector(0,-1))
     }
 }
 
