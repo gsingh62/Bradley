@@ -29,11 +29,10 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
     override fun moveObject(mapObject: MapObject, deltax: Int, deltay: Int) {
         val coordinate = positionFor(mapObject)
         val newCoordinate = Coordinate(coordinate.x + deltax, coordinate.y + deltay)
-        val oldPlace = nodes[coordinate]
-        val newPlace = nodes[newCoordinate]
+        val oldPlace = getNode(coordinate)
+        val newPlace = getNode(newCoordinate)
         if (newPlace is WallNode) {
             throw HitWallException()
-
         } else if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
             oldPlace.removeObject(mapObject)
             newPlace.addObject(mapObject)
@@ -56,7 +55,7 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y-1)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(10)
+                    startingActor = Actor(20)
                     OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {

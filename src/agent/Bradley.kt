@@ -1,14 +1,34 @@
 package agent
 
 import action.Action
+import exception.InvalidMoveException
 import map.Actor
 
 interface Player {
     val actor: Actor
-    var feedback: String
+    var feedback: InvalidMoveException?
     fun chooseNextMove(): Action
-    fun receiveFeedback(feedback: String) {
+    fun receiveFeedback(feedback: InvalidMoveException) {
         this.feedback = feedback
+    }
+}
+
+class GeneralPlayer(override val actor: Actor): Player {
+    override var feedback: InvalidMoveException? = null
+    private var previousAction: Action? = null
+    override fun chooseNextMove(): Action {
+        return if (previousAction == null) {
+            previousAction = Action.MOVE_NORTH
+            previousAction!!
+        } else {
+            if (feedback != null) {
+                feedback = null
+                previousAction = Action.valueOf(previousAction!!.nextDirectionToTry)
+                previousAction!!
+            } else {
+                previousAction!!
+            }
+        }
     }
 }
 

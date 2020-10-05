@@ -8,7 +8,6 @@ class Actor(private var lifeUnits: Int) : MapObject {
         get() = this.lifeUnits > 0
 
     fun loseOneLifeUnit() { lifeUnits-- }
-
 }
 
 interface Node {}

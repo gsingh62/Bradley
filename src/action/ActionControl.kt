@@ -1,5 +1,12 @@
 package action
 
-enum class Action {
-    MOVE_NORTH
+enum class Action(val nextDirectionToTry: String) {
+    MOVE_NORTHEAST("MOVE_NORTH"),
+    MOVE_EAST("MOVE_NORTHEAST"),
+    MOVE_SOUTHEAST("MOVE_EAST"),
+    MOVE_SOUTH("MOVE_SOUTHEAST"),
+    MOVE_SOUTHWEST("MOVE_SOUTH"),
+    MOVE_WEST("MOVE_SOUTHWEST"),
+    MOVE_NORTHWEST("MOVE_WEST"),
+    MOVE_NORTH("MOVE_NORTHWEST");
 }
