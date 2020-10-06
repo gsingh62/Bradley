@@ -6,6 +6,7 @@ import agent.GeneralPlayer
 import agent.Player
 import exception.HitWallException
 import exception.InvalidMoveException
+import exception.InvalidVectorException
 import game.Game
 import map.Actor
 import map.Coordinate
@@ -33,7 +34,11 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = AlwaysGoUpPlayer(actor)
-        val game = Game(player, map)
+        val condition: (Move) -> InvalidMoveException? =
+                { m: Move ->
+                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
+                }
+        val game = Game(player, map, listOf(condition))
 
         game.run()
         assertThat(map.positionFor(actor), equalTo(exitPosition))
@@ -53,7 +58,11 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = AlwaysGoUpPlayer(actor)
-        val game = Game(player, map)
+        val condition: (Move) -> InvalidMoveException? =
+                { m: Move ->
+                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
+                }
+        val game = Game(player, map, listOf(condition))
         game.run()
 
         assertNotEquals(map.positionFor(actor), exitPosition)
@@ -73,11 +82,39 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = GeneralPlayer(actor)
-        val game = Game(player, map)
+        val condition: (Move) -> InvalidMoveException? =
+                { m: Move ->
+                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
+                }
+        val game = Game(player, map, listOf(condition))
         game.run()
 
         assertEquals(exitPosition, map.positionFor(actor))
         assertEquals(true, actor.alive)
+    }
+
+    @Test
+    fun testDoesntWinWithGameRulesBeingViolated() {
+        val builder = WorldMapBuilder()
+                .load("""
+                    .e.
+                    ...
+                    .s.
+                    """)
+        val actor: Actor = builder.getStartingActor()
+        val exitPosition: Coordinate = builder.getExitPosition()
+        val map = builder.build()
+
+        val player = AlwaysGoUpPlayer(actor)
+        val condition: (Move) -> InvalidMoveException? =
+                { m: Move ->
+                    if (!(Math.abs(m.vector.deltax) < 1 && Math.abs(m.vector.deltay) < 1))  InvalidVectorException() else null
+                }
+        val game = Game(player, map, listOf(condition))
+        game.run()
+
+        assertNotEquals(map.positionFor(actor), exitPosition)
+        assertTrue(player.feedback is InvalidVectorException)
     }
 }
 

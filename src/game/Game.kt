@@ -6,7 +6,9 @@ import exception.InvalidMoveException
 import map.ExitNode
 import map.WorldMap
 
-class Game(private val player: Player, private val worldMap: WorldMap) {
+class Game(private val player: Player,
+           private val worldMap: WorldMap,
+           private val gameRules: List<(Move) -> InvalidMoveException?>) {
 
     private var timeCounter: Int = 0
 
@@ -17,11 +19,20 @@ class Game(private val player: Player, private val worldMap: WorldMap) {
                     break
                 }
                 player.actor.loseOneLifeUnit()
-                worldMap.moveObject(player.actor, (player.chooseNextMove() as Move).vector)
+                when (val action = player.chooseNextMove()) {
+                    is Move ->  {
+                        validateRules(action)
+                        worldMap.moveObject(player.actor, action.vector)
+                    }
+                }
                 timeCounter++
             } catch (ex: InvalidMoveException) {
                 player.receiveFeedback(ex)
             }
         }
+    }
+
+    private fun validateRules(move: Move) {
+        gameRules.forEach { it(move)?.let{ throw it } }
     }
 }
