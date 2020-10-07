@@ -1,5 +1,8 @@
 package action
 
-enum class Action {
-    MOVE_NORTH
+import map.Vector
+
+interface Action {
 }
+
+class Move(val vector: Vector): Action {}

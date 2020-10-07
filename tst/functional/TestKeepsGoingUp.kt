@@ -1,15 +1,22 @@
 package functional
 
 import action.Action
+import action.Move
+import agent.GeneralPlayer
 import agent.Player
-import exception.HIT_WALL_EXCEPTION_MESSAGE
+import exception.HitWallException
+import exception.InvalidMoveException
+import exception.InvalidVectorException
 import game.Game
 import map.Actor
 import map.Coordinate
+import map.Vector
 import map.WorldMapBuilder
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TestKeepsGoingUp {
@@ -30,7 +37,6 @@ class TestKeepsGoingUp {
         val game = Game(player, map)
 
         game.run()
-
         assertThat(map.positionFor(actor), equalTo(exitPosition))
         assertThat(actor.alive, equalTo(true))
     }
@@ -52,15 +58,63 @@ class TestKeepsGoingUp {
         game.run()
 
         assertNotEquals(map.positionFor(actor), exitPosition)
-        assertThat(player.feedback, equalTo(HIT_WALL_EXCEPTION_MESSAGE))
+        assertTrue(player.feedback is HitWallException)
+    }
+
+    @Test
+    fun testNavigatesWallAndWins() {
+        val builder = WorldMapBuilder()
+                .load("""
+                    .e.
+                    .X.
+                    .s.
+                """)
+        val actor: Actor = builder.getStartingActor()
+        val exitPosition: Coordinate = builder.getExitPosition()
+        val map = builder.build()
+
+        val player = GeneralPlayer(actor)
+        val game = Game(player, map)
+        game.run()
+
+        assertEquals(exitPosition, map.positionFor(actor))
+        assertEquals(true, actor.alive)
+    }
+
+    @Test
+    fun testDoesntWinWithGameRulesBeingViolated() {
+        val builder = WorldMapBuilder()
+                .load("""
+                    .e.
+                    ...
+                    .s.
+                    """)
+        val actor: Actor = builder.getStartingActor()
+        val exitPosition: Coordinate = builder.getExitPosition()
+        val map = builder.build()
+
+        val player = TeleportingPlayer(actor)
+        val game = Game(player, map)
+        game.run()
+
+        assertNotEquals(map.positionFor(actor), exitPosition)
+        assertTrue(player.feedback is InvalidVectorException)
     }
 }
 
 class AlwaysGoUpPlayer(override val actor: Actor): Player {
-    override lateinit var feedback: String
+    override var feedback: InvalidMoveException? = null
 
     override fun chooseNextMove(): Action {
-        return Action.MOVE_NORTH
+        return Move(Vector(0,-1))
+    }
+}
+
+class TeleportingPlayer(override val actor: Actor): Player {
+    override var feedback: InvalidMoveException? = null
+
+    override fun chooseNextMove(): Action {
+        return Move(Vector(0,-50))
     }
 }
 
