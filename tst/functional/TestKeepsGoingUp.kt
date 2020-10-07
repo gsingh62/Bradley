@@ -34,11 +34,7 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = AlwaysGoUpPlayer(actor)
-        val condition: (Move) -> InvalidMoveException? =
-                { m: Move ->
-                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
-                }
-        val game = Game(player, map, listOf(condition))
+        val game = Game(player, map)
 
         game.run()
         assertThat(map.positionFor(actor), equalTo(exitPosition))
@@ -58,11 +54,7 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = AlwaysGoUpPlayer(actor)
-        val condition: (Move) -> InvalidMoveException? =
-                { m: Move ->
-                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
-                }
-        val game = Game(player, map, listOf(condition))
+        val game = Game(player, map)
         game.run()
 
         assertNotEquals(map.positionFor(actor), exitPosition)
@@ -82,11 +74,7 @@ class TestKeepsGoingUp {
         val map = builder.build()
 
         val player = GeneralPlayer(actor)
-        val condition: (Move) -> InvalidMoveException? =
-                { m: Move ->
-                    if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))  InvalidVectorException() else null
-                }
-        val game = Game(player, map, listOf(condition))
+        val game = Game(player, map)
         game.run()
 
         assertEquals(exitPosition, map.positionFor(actor))
@@ -105,12 +93,8 @@ class TestKeepsGoingUp {
         val exitPosition: Coordinate = builder.getExitPosition()
         val map = builder.build()
 
-        val player = AlwaysGoUpPlayer(actor)
-        val condition: (Move) -> InvalidMoveException? =
-                { m: Move ->
-                    if (!(Math.abs(m.vector.deltax) < 1 && Math.abs(m.vector.deltay) < 1))  InvalidVectorException() else null
-                }
-        val game = Game(player, map, listOf(condition))
+        val player = TeleportingPlayer(actor)
+        val game = Game(player, map)
         game.run()
 
         assertNotEquals(map.positionFor(actor), exitPosition)
@@ -123,6 +107,14 @@ class AlwaysGoUpPlayer(override val actor: Actor): Player {
 
     override fun chooseNextMove(): Action {
         return Move(Vector(0,-1))
+    }
+}
+
+class TeleportingPlayer(override val actor: Actor): Player {
+    override var feedback: InvalidMoveException? = null
+
+    override fun chooseNextMove(): Action {
+        return Move(Vector(0,-50))
     }
 }
 
