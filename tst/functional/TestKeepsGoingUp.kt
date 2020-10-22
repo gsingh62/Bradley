@@ -8,10 +8,8 @@ import exception.HitWallException
 import exception.InvalidMoveException
 import exception.InvalidVectorException
 import game.Game
-import map.Actor
-import map.Coordinate
+import map.*
 import map.Vector
-import map.WorldMapBuilder
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertEquals
@@ -100,6 +98,27 @@ class TestKeepsGoingUp {
         assertNotEquals(map.positionFor(actor), exitPosition)
         assertTrue(player.feedback is InvalidVectorException)
     }
+
+    @Test
+    fun testBFS() {
+        val builder = WorldMapBuilder()
+                .load("""
+                    .e.
+                    ...
+                    .s.
+                    """)
+        val actor: Actor = builder.getStartingActor()
+        val exitPosition: Coordinate = builder.getExitPosition()
+        val map = builder.build()
+
+
+        val player = BFSPlayer(actor)
+        player.setStartNodeCoordinate(map.positionFor(actor))
+        val game = Game(player, map)
+        game.run()
+
+        assertEquals(exitPosition, map.positionFor(actor))
+        assertEquals(true, actor.alive)    }
 }
 
 class AlwaysGoUpPlayer(override val actor: Actor): Player {
@@ -115,6 +134,27 @@ class TeleportingPlayer(override val actor: Actor): Player {
 
     override fun chooseNextMove(): Action {
         return Move(Vector(0,-50))
+    }
+}
+
+class BFSPlayer(override val actor: Actor): Player {
+    override var feedback: InvalidMoveException? = null
+    private lateinit var previousNodeCoordinate: Coordinate
+    fun setStartNodeCoordinate(startNodeCoordinate: Coordinate) {
+        actor.addNextNodeCoordinate(coordinate = startNodeCoordinate)
+        previousNodeCoordinate = startNodeCoordinate
+    }
+    override fun chooseNextMove(): Action {
+        if (!actor.isNodeQueueEmpty()) {
+            val coordinate = actor.getNextNodeCoordinate()
+            coordinate.markNodeVisited()
+
+            for (coordinate in coordinate.getSurroundingNodes()) {
+                    actor.addNextNodeCoordinate(coordinate)
+            }
+            return Move(previousNodeCoordinate.calculateNewMoveVector(coordinate))
+        }
+        return Move(Vector(0,0))
     }
 }
 

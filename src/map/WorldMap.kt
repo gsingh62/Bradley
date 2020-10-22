@@ -5,12 +5,33 @@ import exception.HitWallException
 import exception.PositionNotFoundException
 
 data class Coordinate(val x: Int, val y: Int) {
-
+    private var visited: Boolean = false
     fun add (vector: Vector): Coordinate {
         return Coordinate(this.x + vector.deltax,this.y + vector.deltay)
     }
 
+    fun markNodeVisited() {
+        this.visited = true
+    }
+
+    fun getSurroundingNodes(): List<Coordinate> {
+        val surroundingNodes = mutableListOf<Coordinate>()
+        surroundingNodes.add(Coordinate(this.x + 1, this.y + 1))
+        surroundingNodes.add(Coordinate(this.x - 1, this.y - 1))
+        surroundingNodes.add(Coordinate(this.x + 1, this.y - 1))
+        surroundingNodes.add(Coordinate(this.x - 1, this.y + 1))
+        surroundingNodes.add(Coordinate(this.x , this.y + 1))
+        surroundingNodes.add(Coordinate(this.x + 1 , this.y))
+        surroundingNodes.add(Coordinate(this.x , this.y - 1))
+        surroundingNodes.add(Coordinate(this.x - 1 , this.y))
+        return surroundingNodes
+    }
+
+    fun calculateNewMoveVector(coordinate: Coordinate): Vector {
+        return Vector(coordinate.x - this.x, coordinate.y - this.y)
+    }
 }
+
 data class Vector (val deltax: Int, val deltay: Int)
 
 interface WorldMap {
@@ -63,7 +84,7 @@ class WorldMapBuilder {
             val node = when(s[i]) {
                 's' ->  {
                     startingActor = Actor(20)
-                    OpenSpaceNode().apply { addObject(startingActor) }
+                    OpenSpaceNode(true).apply { addObject(startingActor) }
                 }
                 'e' -> {
                     exitPosition = coordinate
