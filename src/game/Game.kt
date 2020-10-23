@@ -8,7 +8,8 @@ import map.ExitNode
 import map.WorldMap
 
 class Game(private val player: Player,
-           private val worldMap: WorldMap) {
+           private val worldMap: WorldMap,
+           private val rules: List<(Move) -> InvalidMoveException?> = listOf(preventTeleportation)) {
 
     private var timeCounter: Int = 0
 
@@ -22,6 +23,7 @@ class Game(private val player: Player,
                 when (val action = player.chooseNextMove()) {
                     is Move ->  {
                         validateRules(action)
+                        println("actor position: " + worldMap.positionFor(player.actor))
                         worldMap.moveObject(player.actor, action.vector)
                     }
                 }
@@ -42,4 +44,5 @@ private val preventTeleportation: (Move) -> InvalidMoveException? =
             if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))
                 InvalidVectorException() else null
         }
-val rules = listOf(preventTeleportation)
+
+

@@ -103,22 +103,32 @@ class TestKeepsGoingUp {
     fun testBFS() {
         val builder = WorldMapBuilder()
                 .load("""
-                    .e.
-                    ...
-                    .s.
+                    .........
+                    ....e....
+                    .........
+                    .........
+                    .........
+                    ....s....
                     """)
         val actor: Actor = builder.getStartingActor()
         val exitPosition: Coordinate = builder.getExitPosition()
         val map = builder.build()
 
+        val preventCrossingBoundaries: (Move) -> InvalidMoveException? =
+                { m: Move ->
+                    if (!( Math.abs(m.vector.deltax) >= 0 && Math.abs(m.vector.deltax) >= 0 &&
+                                    Math.abs(m.vector.deltax) <= 8 && Math.abs(m.vector.deltay) <= 5))
+                        InvalidVectorException() else null
+                }
 
         val player = BFSPlayer(actor)
         player.setStartNodeCoordinate(map.positionFor(actor))
-        val game = Game(player, map)
+        val game = Game(player, map, listOf(preventCrossingBoundaries))
         game.run()
 
         assertEquals(exitPosition, map.positionFor(actor))
-        assertEquals(true, actor.alive)    }
+        assertEquals(true, actor.alive)
+    }
 }
 
 class AlwaysGoUpPlayer(override val actor: Actor): Player {
@@ -141,18 +151,28 @@ class BFSPlayer(override val actor: Actor): Player {
     override var feedback: InvalidMoveException? = null
     private lateinit var previousNodeCoordinate: Coordinate
     fun setStartNodeCoordinate(startNodeCoordinate: Coordinate) {
+        println("x: "  + startNodeCoordinate.x + " y: " + startNodeCoordinate.y)
         actor.addNextNodeCoordinate(coordinate = startNodeCoordinate)
         previousNodeCoordinate = startNodeCoordinate
     }
     override fun chooseNextMove(): Action {
+        if (feedback != null) {
+            println(feedback)
+        }
         if (!actor.isNodeQueueEmpty()) {
             val coordinate = actor.getNextNodeCoordinate()
+            while (coordinate.isVisited()) {
+                val coordinate = actor.getNextNodeCoordinate()
+            }
             coordinate.markNodeVisited()
 
             for (coordinate in coordinate.getSurroundingNodes()) {
                     actor.addNextNodeCoordinate(coordinate)
             }
-            return Move(previousNodeCoordinate.calculateNewMoveVector(coordinate))
+            val action = previousNodeCoordinate.calculateNewMoveVector(coordinate)
+            println("x: "  + coordinate.x + " y: " + coordinate.y)
+
+            return Move(action)
         }
         return Move(Vector(0,0))
     }

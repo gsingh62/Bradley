@@ -14,6 +14,10 @@ data class Coordinate(val x: Int, val y: Int) {
         this.visited = true
     }
 
+    fun isVisited(): Boolean {
+        return this.visited
+    }
+
     fun getSurroundingNodes(): List<Coordinate> {
         val surroundingNodes = mutableListOf<Coordinate>()
         surroundingNodes.add(Coordinate(this.x + 1, this.y + 1))
@@ -83,7 +87,7 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(20)
+                    startingActor = Actor(25)
                     OpenSpaceNode(true).apply { addObject(startingActor) }
                 }
                 'e' -> {
