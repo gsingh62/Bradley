@@ -3,36 +3,11 @@ package map
 import exception.ActorNotOnMapException
 import exception.HitWallException
 import exception.PositionNotFoundException
+import java.lang.IllegalStateException
 
 data class Coordinate(val x: Int, val y: Int) {
-    private var visited: Boolean = false
     fun add (vector: Vector): Coordinate {
         return Coordinate(this.x + vector.deltax,this.y + vector.deltay)
-    }
-
-    fun markNodeVisited() {
-        this.visited = true
-    }
-
-    fun isVisited(): Boolean {
-        return this.visited
-    }
-
-    fun getSurroundingNodes(): List<Coordinate> {
-        val surroundingNodes = mutableListOf<Coordinate>()
-        surroundingNodes.add(Coordinate(this.x + 1, this.y + 1))
-        surroundingNodes.add(Coordinate(this.x - 1, this.y - 1))
-        surroundingNodes.add(Coordinate(this.x + 1, this.y - 1))
-        surroundingNodes.add(Coordinate(this.x - 1, this.y + 1))
-        surroundingNodes.add(Coordinate(this.x , this.y + 1))
-        surroundingNodes.add(Coordinate(this.x + 1 , this.y))
-        surroundingNodes.add(Coordinate(this.x , this.y - 1))
-        surroundingNodes.add(Coordinate(this.x - 1 , this.y))
-        return surroundingNodes
-    }
-
-    fun calculateNewMoveVector(coordinate: Coordinate): Vector {
-        return Vector(coordinate.x - this.x, coordinate.y - this.y)
     }
 }
 
@@ -42,9 +17,38 @@ interface WorldMap {
     fun positionFor(mapObject: MapObject): Coordinate
     fun getNode(positionFor: Coordinate): Node
     fun moveObject(actor: MapObject, vector: Vector)
+    fun getAllCoordinates(): Set<Coordinate>
+    fun getSurrounding(actor: Actor): WorldMap
 }
 
-class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
+class Memory(private val nodes: MutableMap<Coordinate, Node>) {
+
+    companion object {
+        fun init(coordinates: Set<Coordinate>): Memory {
+            val nodes: MutableMap<Coordinate, Node> = mutableMapOf()
+            for(coordinate in coordinates) {
+                nodes[coordinate] = OpenSpaceNode()
+            }
+            return Memory(nodes)
+        }
+    }
+    fun furnishMemoryWithSurrounding(surrounding: WorldMap) {
+        for (coordinate in surrounding.getAllCoordinates()) {
+            nodes[coordinate] = surrounding.getNode(coordinate)
+        }
+    }
+
+    fun getNode(coordinate: Coordinate): Node {
+        return nodes[coordinate] ?: throw IllegalStateException("Node not found in this position")
+    }
+
+    fun getAllCoordinates(): Set<Coordinate> = nodes.keys
+}
+
+open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
+    override fun getAllCoordinates(): Set<Coordinate> =
+        nodes.keys
+
     override fun positionFor(mapObject: MapObject): Coordinate {
         nodes.forEach { (k, v) ->
             if (v is OpenSpaceNode) {
@@ -63,12 +67,26 @@ class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : 
         val newCoordinate = coordinate.add(vector)
         val oldPlace = getNode(coordinate)
         val newPlace = getNode(newCoordinate)
+
         if (newPlace is WallNode) {
             throw HitWallException()
         } else if (oldPlace is OpenSpaceNode && newPlace is OpenSpaceNode) {
             oldPlace.removeObject(mapObject)
             newPlace.addObject(mapObject)
         }
+    }
+
+    override fun getSurrounding(actor: Actor): WorldMap {
+        val radius = 2
+        val surroundingNodes: MutableMap<Coordinate, Node> = mutableMapOf()
+        val pos = positionFor(actor)
+        for (coordinate in getAllCoordinates()) {
+            if (Math.sqrt(Math.pow((pos.x - coordinate.x).toDouble(), 2.0) +
+                    Math.pow((pos.y - coordinate.y).toDouble(), 2.0)) <= radius) {
+                surroundingNodes[coordinate] = getNode(coordinate)
+            }
+        }
+        return CoordinateNodeWorldMap(surroundingNodes)
     }
 
     override fun getNode(positionFor: Coordinate): Node {
@@ -87,8 +105,8 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(25)
-                    OpenSpaceNode(true).apply { addObject(startingActor) }
+                    startingActor = Actor(1000)
+                    OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {
                     exitPosition = coordinate
