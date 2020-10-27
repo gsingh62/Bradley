@@ -1,36 +1,29 @@
 package map
 
-import java.util.*
-
 interface MapObject {}
 
 class Actor(private var lifeUnits: Int) : MapObject {
-
-    private val nodes = ArrayList<Coordinate>()
+    private var surrounding: WorldMap? = null
     val alive: Boolean
         get() = this.lifeUnits > 0
 
     fun loseOneLifeUnit() { lifeUnits-- }
-
-    fun addNextNodeCoordinate(coordinate: Coordinate) {
-        nodes.add(coordinate)
+    fun getSurrounding(): WorldMap {
+        return surrounding!!
     }
-
-    fun getNextNodeCoordinate(): Coordinate {
-        return nodes.removeAt(0)
-    }
-
-    fun isNodeQueueEmpty(): Boolean {
-        return nodes.isEmpty()
+    fun setSurrounding(surrounding: WorldMap) {
+        this.surrounding = surrounding
     }
 }
 
-interface Node {}
+interface Node {
+}
 
-class ExitNode() : OpenSpaceNode() {}
+class ExitNode : OpenSpaceNode() {}
 
-open class OpenSpaceNode(private val discovered: Boolean = false) : Node {
+open class OpenSpaceNode : Node {
     val objects: MutableList<MapObject> = mutableListOf()
+
     fun removeObject(actor: MapObject) {
         objects.remove(actor)
     }
@@ -40,4 +33,5 @@ open class OpenSpaceNode(private val discovered: Boolean = false) : Node {
     }
 }
 
-class WallNode : Node {}
+class WallNode : Node {
+}
