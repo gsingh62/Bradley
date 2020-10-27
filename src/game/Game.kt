@@ -9,7 +9,6 @@ import map.WorldMap
 
 class Game(private val player: Player,
            private val worldMap: WorldMap) {
-
     private var timeCounter: Int = 0
 
     fun run() {
@@ -19,6 +18,7 @@ class Game(private val player: Player,
                     break
                 }
                 player.actor.loseOneLifeUnit()
+                player.actor.setSurrounding(worldMap.getSurrounding(player.actor))
                 when (val action = player.chooseNextMove()) {
                     is Move ->  {
                         validateRules(action)
@@ -42,4 +42,12 @@ private val preventTeleportation: (Move) -> InvalidMoveException? =
             if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))
                 InvalidVectorException() else null
         }
-val rules = listOf(preventTeleportation)
+
+val preventCrossingBoundaries: (Move) -> InvalidMoveException? =
+        { m: Move ->
+            if (!( Math.abs(m.vector.deltax) >= 0 && Math.abs(m.vector.deltax) >= 0 &&
+                            Math.abs(m.vector.deltax) <= 8 && Math.abs(m.vector.deltay) <= 5))
+                InvalidVectorException() else null
+        }
+
+private val rules = listOf(preventCrossingBoundaries, preventTeleportation)
