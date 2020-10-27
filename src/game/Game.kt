@@ -6,13 +6,9 @@ import exception.InvalidMoveException
 import exception.InvalidVectorException
 import map.ExitNode
 import map.WorldMap
-import org.slf4j.LoggerFactory
 
 class Game(private val player: Player,
            private val worldMap: WorldMap) {
-
-    private val log = LoggerFactory.getLogger(Game::class.java)
-
     private var timeCounter: Int = 0
 
     fun run() {
@@ -27,7 +23,6 @@ class Game(private val player: Player,
                     is Move ->  {
                         validateRules(action)
                         worldMap.moveObject(player.actor, action.vector)
-                        log.info("moved actor to {}", worldMap.positionFor(player.actor))
                     }
                 }
                 timeCounter++
@@ -48,7 +43,6 @@ private val preventTeleportation: (Move) -> InvalidMoveException? =
                 InvalidVectorException() else null
         }
 
-
 val preventCrossingBoundaries: (Move) -> InvalidMoveException? =
         { m: Move ->
             if (!( Math.abs(m.vector.deltax) >= 0 && Math.abs(m.vector.deltax) >= 0 &&
@@ -57,5 +51,3 @@ val preventCrossingBoundaries: (Move) -> InvalidMoveException? =
         }
 
 private val rules = listOf(preventCrossingBoundaries, preventTeleportation)
-
-
