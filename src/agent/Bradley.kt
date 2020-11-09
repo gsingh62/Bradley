@@ -16,9 +16,9 @@ interface Player {
 }
 
 class GeneralPlayer(override val actor: Actor): Player {
-    private val options = listOf(Vector(1,-1), Vector(1,0), Vector(1, 1),
-    Vector(0,1),Vector(-1, 1), Vector(-1, 0), Vector(-1, -1),
-    Vector(0, -1))
+    private val options = listOf(Vector(1.0,-1.0), Vector(1.0,0.0), Vector(1.0, 1.0),
+    Vector(0.0,1.0),Vector(-1.0, 1.0), Vector(-1.0, 0.0), Vector(-1.0, -1.0),
+    Vector(0.0, -1.0))
     override var feedback: InvalidMoveException? = null
     private var previousActionIndex = 0
     override fun chooseNextMove(): Action {

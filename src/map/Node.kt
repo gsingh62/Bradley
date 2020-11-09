@@ -3,15 +3,15 @@ package map
 interface MapObject {}
 
 class Actor(private var lifeUnits: Int) : MapObject {
-    private var surrounding: WorldMap? = null
+    private var surrounding: Surrounding? = null
     val alive: Boolean
         get() = this.lifeUnits > 0
 
     fun loseOneLifeUnit() { lifeUnits-- }
-    fun getSurrounding(): WorldMap {
+    fun getSurrounding(): Surrounding {
         return surrounding!!
     }
-    fun setSurrounding(surrounding: WorldMap) {
+    fun setSurrounding(surrounding: Surrounding) {
         this.surrounding = surrounding
     }
 }
@@ -23,7 +23,6 @@ class ExitNode : OpenSpaceNode() {}
 
 open class OpenSpaceNode : Node {
     val objects: MutableList<MapObject> = mutableListOf()
-
     fun removeObject(actor: MapObject) {
         objects.remove(actor)
     }

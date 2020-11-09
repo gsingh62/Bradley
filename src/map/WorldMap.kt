@@ -3,26 +3,29 @@ package map
 import exception.ActorNotOnMapException
 import exception.HitWallException
 import exception.PositionNotFoundException
+import game.Game
+import org.slf4j.LoggerFactory
 import java.lang.IllegalStateException
 
-data class Coordinate(val x: Int, val y: Int) {
+data class Coordinate(val x: Double, val y: Double) {
     fun add (vector: Vector): Coordinate {
         return Coordinate(this.x + vector.deltax,this.y + vector.deltay)
     }
 }
 
-data class Vector (val deltax: Int, val deltay: Int)
+data class Vector (val deltax: Double, val deltay: Double)
 
 interface WorldMap {
     fun positionFor(mapObject: MapObject): Coordinate
     fun getNode(positionFor: Coordinate): Node
     fun moveObject(actor: MapObject, vector: Vector)
     fun getAllCoordinates(): Set<Coordinate>
-    fun getSurrounding(actor: Actor): WorldMap
+    fun getSurrounding(actor: Actor): Surrounding
 }
 
 class Memory(private val nodes: MutableMap<Coordinate, Node>) {
 
+    val visitedNodes = HashSet<Coordinate>()
     companion object {
         fun init(coordinates: Set<Coordinate>): Memory {
             val nodes: MutableMap<Coordinate, Node> = mutableMapOf()
@@ -32,7 +35,7 @@ class Memory(private val nodes: MutableMap<Coordinate, Node>) {
             return Memory(nodes)
         }
     }
-    fun furnishMemoryWithSurrounding(surrounding: WorldMap) {
+    fun furnishMemoryWithSurrounding(surrounding: Surrounding) {
         for (coordinate in surrounding.getAllCoordinates()) {
             nodes[coordinate] = surrounding.getNode(coordinate)
         }
@@ -42,10 +45,20 @@ class Memory(private val nodes: MutableMap<Coordinate, Node>) {
         return nodes[coordinate] ?: throw IllegalStateException("Node not found in this position")
     }
 
+    fun markNodeVisited(node: Coordinate) {
+        visitedNodes.add(node)
+    }
+
+    fun isNodeVisited(node: Coordinate): Boolean {
+        return visitedNodes.contains(node)
+    }
+
     fun getAllCoordinates(): Set<Coordinate> = nodes.keys
 }
 
 open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
+    private val log = LoggerFactory.getLogger(CoordinateNodeWorldMap::class.java)
+
     override fun getAllCoordinates(): Set<Coordinate> =
         nodes.keys
 
@@ -63,6 +76,7 @@ open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node
     }
 
     override fun moveObject(mapObject: MapObject, vector: Vector) {
+        log.info("asked to move actor to {} {}", vector.deltax, vector.deltay )
         val coordinate = positionFor(mapObject)
         val newCoordinate = coordinate.add(vector)
         val oldPlace = getNode(coordinate)
@@ -76,17 +90,17 @@ open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node
         }
     }
 
-    override fun getSurrounding(actor: Actor): WorldMap {
+    override fun getSurrounding(actor: Actor): Surrounding {
         val radius = 2
         val surroundingNodes: MutableMap<Coordinate, Node> = mutableMapOf()
         val pos = positionFor(actor)
         for (coordinate in getAllCoordinates()) {
-            if (Math.sqrt(Math.pow((pos.x - coordinate.x).toDouble(), 2.0) +
-                    Math.pow((pos.y - coordinate.y).toDouble(), 2.0)) <= radius) {
+            if (Math.sqrt(Math.pow((pos.x - coordinate.x), 2.0) +
+                    Math.pow((pos.y - coordinate.y), 2.0)) <= radius) {
                 surroundingNodes[coordinate] = getNode(coordinate)
             }
         }
-        return CoordinateNodeWorldMap(surroundingNodes)
+        return Surrounding(surroundingNodes)
     }
 
     override fun getNode(positionFor: Coordinate): Node {
@@ -98,14 +112,20 @@ class WorldMapBuilder {
     private val nodes = mutableMapOf<Coordinate, Node>()
     private lateinit var startingActor: Actor
     private lateinit var exitPosition: Coordinate
-    fun load(s: String): WorldMapBuilder {
+
+    /**
+     * stringMap: The string representation of the map's main coordinates
+     * additionalEmptyCoordinates: In some map navigation algorithms additional non-integer and
+     * negative coordinates will be required. For example, for the exploratory player with no end node provided.
+     */
+    fun load(stringMap: String, additionalEmptyCoordinates: List<Coordinate>? = null): WorldMapBuilder {
         var x = 0
         var y = -1
-        for (i in s.indices) {
-            val coordinate = Coordinate(x, y)
-            val node = when(s[i]) {
+        for (i in stringMap.indices) {
+            val coordinate = Coordinate(x.toDouble(), y.toDouble())
+            val node = when(stringMap[i]) {
                 's' ->  {
-                    startingActor = Actor(25)
+                    startingActor = Actor(50)
                     OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {
@@ -118,12 +138,19 @@ class WorldMapBuilder {
                 else -> OpenSpaceNode()
             }
 
-            if (s[i] == '\n') {
+            if (stringMap[i] == '\n') {
                 y++
                 x = 0
             } else {
                 nodes[coordinate] = node
                 x++
+            }
+        }
+        if (additionalEmptyCoordinates != null) {
+            for (coordinate in additionalEmptyCoordinates) {
+                if (!nodes.containsKey(coordinate)) {
+                    nodes[coordinate] = OpenSpaceNode()
+                }
             }
         }
         return this

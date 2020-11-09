@@ -8,9 +8,9 @@ import map.WallNode
 class LearningUnit(val memory: Memory) {
 
     fun receiveVisualStimuli(visualStimuli: VisualStimuli) {
-        val currentPosition = Coordinate(0,0 )
-        for (y in currentPosition.y until currentPosition.y+3) {
-            if (visualStimuli.vicinity[Coordinate(currentPosition.x, y)] is WallNode) {
+        val currentPosition = Coordinate(0.0,0.0 )
+        for (y in currentPosition.y.toInt() until currentPosition.y.toInt()+3) {
+            if (visualStimuli.vicinity[Coordinate(currentPosition.x, y.toDouble())] is WallNode) {
                 break
             }
         }
