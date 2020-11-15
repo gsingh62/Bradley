@@ -28,7 +28,7 @@ class TestWorldMapBuilder {
         val actorNode = map.getNode(map.positionFor(actor))
         assertThat(actorNode, instanceOf(OpenSpaceNode::class.java))
         if (actorNode is OpenSpaceNode) {
-            assertThat(actorNode.objects, contains(actor))
+            assertThat(actorNode.objects, contains(actor as MapObject))
         }
     }
 }

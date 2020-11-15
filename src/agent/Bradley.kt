@@ -4,7 +4,11 @@ import action.Action
 import action.Move
 import exception.InvalidMoveException
 import map.Actor
+import map.Coordinate
+import map.Node
+import map.OpenSpaceNode
 import map.Vector
+import map.WorldMap
 
 interface Player {
     val actor: Actor
@@ -29,6 +33,31 @@ class GeneralPlayer(override val actor: Actor): Player {
         }
         return Move(options[previousActionIndex])
     }
+}
+
+private fun fillWithOpenNodes(coordinates: Set<Coordinate>): MutableMap<Coordinate, Node> {
+    val nodes = HashMap<Coordinate, Node>()
+    for(coordinate in coordinates) {
+        nodes[coordinate] = OpenSpaceNode()
+    }
+    return nodes
+}
+
+class Memory(private val nodes: MutableMap<Coordinate, Node>) {
+
+    constructor(coordinates: Set<Coordinate>) : this(fillWithOpenNodes(coordinates))
+
+    fun furnishMemoryWithSurrounding(surrounding: WorldMap) {
+        for (coordinate in surrounding.getAllCoordinates()) {
+            nodes[coordinate] = surrounding.getNode(coordinate)
+        }
+    }
+
+    fun getNode(coordinate: Coordinate): Node {
+        return nodes[coordinate] ?: throw IllegalStateException("Node not found in this position")
+    }
+
+    fun getAllCoordinates(): Set<Coordinate> = nodes.keys
 }
 
 class Bradley {
