@@ -1,0 +1,67 @@
+visibilityRadius: 2
+map {
+  coordinate {
+  }
+}
+map {
+  coordinate {
+    x: 1
+  }
+  nodeType: EXIT_NODE
+}
+map {
+  coordinate {
+    x: 2
+  }
+}
+map {
+  coordinate {
+    y: 1
+  }
+}
+map {
+  coordinate {
+    x: 1
+    y: 1
+  }
+}
+map {
+  coordinate {
+    x: 2
+    y: 1
+  }
+}
+map {
+  coordinate {
+    y: 2
+  }
+}
+map {
+  coordinate {
+    x: 1
+    y: 2
+  }
+}
+map {
+  coordinate {
+    x: 2
+    y: 2
+  }
+}
+turns {
+  hero {
+    x: 1
+    y: 2
+  }
+}
+turns {
+  hero {
+    x: 1
+    y: 1
+  }
+}
+turns {
+  hero {
+    x: 1
+  }
+}
