@@ -1,9 +1,11 @@
 package map
 
+import action.Move
 import exception.ActorNotOnMapException
 import exception.HitWallException
+import exception.InvalidMoveException
+import exception.InvalidVectorException
 import exception.PositionNotFoundException
-import java.lang.IllegalStateException
 
 data class Coordinate(val x: Int, val y: Int) {
     fun add (vector: Vector): Coordinate {
@@ -16,33 +18,10 @@ data class Vector (val deltax: Int, val deltay: Int)
 interface WorldMap {
     fun positionFor(mapObject: MapObject): Coordinate
     fun getNode(positionFor: Coordinate): Node
-    fun moveObject(actor: MapObject, vector: Vector)
+    fun moveObject(mapObject: MapObject, vector: Vector)
     fun getAllCoordinates(): Set<Coordinate>
-    fun getSurrounding(actor: Actor): WorldMap
-}
-
-class Memory(private val nodes: MutableMap<Coordinate, Node>) {
-
-    companion object {
-        fun init(coordinates: Set<Coordinate>): Memory {
-            val nodes: MutableMap<Coordinate, Node> = mutableMapOf()
-            for(coordinate in coordinates) {
-                nodes[coordinate] = OpenSpaceNode()
-            }
-            return Memory(nodes)
-        }
-    }
-    fun furnishMemoryWithSurrounding(surrounding: WorldMap) {
-        for (coordinate in surrounding.getAllCoordinates()) {
-            nodes[coordinate] = surrounding.getNode(coordinate)
-        }
-    }
-
-    fun getNode(coordinate: Coordinate): Node {
-        return nodes[coordinate] ?: throw IllegalStateException("Node not found in this position")
-    }
-
-    fun getAllCoordinates(): Set<Coordinate> = nodes.keys
+    fun getSurrounding(actor: Actor, radius: Int): WorldMap
+    fun getWorldRules(): WorldRules
 }
 
 open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
@@ -76,8 +55,7 @@ open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node
         }
     }
 
-    override fun getSurrounding(actor: Actor): WorldMap {
-        val radius = 2
+    override fun getSurrounding(actor: Actor, radius: Int): WorldMap {
         val surroundingNodes: MutableMap<Coordinate, Node> = mutableMapOf()
         val pos = positionFor(actor)
         for (coordinate in getAllCoordinates()) {
@@ -92,7 +70,27 @@ open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node
     override fun getNode(positionFor: Coordinate): Node {
         return nodes[positionFor] ?: throw PositionNotFoundException()
     }
+
+    override fun getWorldRules():  WorldRules {
+        val preventTeleportation: (Move, Coordinate) -> InvalidMoveException? = { m: Move, c: Coordinate ->
+            if (!(Math.abs(m.vector.deltax) <= 1 && Math.abs(m.vector.deltay) <= 1))
+                InvalidVectorException() else null
+        }
+
+        val preventCrossingBoundaries: (Move, Coordinate) -> InvalidMoveException? = { m: Move, c: Coordinate ->
+            val proposedPosition = Coordinate(m.vector.deltax + c.x, m.vector.deltay + c.y)
+            try {
+                getNode(proposedPosition)
+                null
+            } catch (ex: PositionNotFoundException) {
+                InvalidVectorException()
+            }
+        }
+        return WorldRules(listOf(preventCrossingBoundaries, preventTeleportation))
+    }
 }
+
+class WorldRules(val worldRulesList: List<(Move, Coordinate) -> InvalidMoveException?>)
 
 class WorldMapBuilder {
     private val nodes = mutableMapOf<Coordinate, Node>()
@@ -105,7 +103,7 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(20)
+                    startingActor = Actor(25)
                     OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {

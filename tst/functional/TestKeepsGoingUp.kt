@@ -3,6 +3,7 @@ package functional
 import action.Action
 import action.Move
 import agent.GeneralPlayer
+import agent.Memory
 import agent.Player
 import exception.HitWallException
 import exception.InvalidMoveException
@@ -11,8 +12,6 @@ import game.Game
 import map.Actor
 import map.Coordinate
 import map.ExitNode
-import map.Memory
-import map.Node
 import map.OpenSpaceNode
 import map.Vector
 import map.WorldMap
@@ -152,7 +151,7 @@ class TestKeepsGoingUp {
         val exitPosition: Coordinate = builder.getExitPosition()
         val map = builder.build()
 
-        val memory = Memory.init(map.getAllCoordinates())
+        val memory = Memory(map.getAllCoordinates())
 
         val player = ExploratoryPlayerWithEndNode(actor, memory, exitPosition)
         val game = Game(player, map)
@@ -186,8 +185,11 @@ class TeleportingPlayer(override val actor: Actor): Player {
 
     }*/
 
-class ExploratoryPlayerWithEndNode(override val actor: Actor, private val memory: Memory,
-                                   private val end: Coordinate): Player {
+class ExploratoryPlayerWithEndNode(
+        override val actor: Actor,
+        private val memory: Memory,
+        private val end: Coordinate
+): Player {
     override var feedback: InvalidMoveException? = null
     override fun chooseNextMove(): Action {
         val surrounding: WorldMap = actor.getSurrounding()
