@@ -26,7 +26,7 @@ interface WorldMap {
 
 open class CoordinateNodeWorldMap(private val nodes: MutableMap<Coordinate, Node>) : WorldMap {
     override fun getAllCoordinates(): Set<Coordinate> =
-        nodes.keys
+            nodes.keys
 
     override fun positionFor(mapObject: MapObject): Coordinate {
         nodes.forEach { (k, v) ->
@@ -103,7 +103,7 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(25)
+                    startingActor = Actor(60)
                     OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {
