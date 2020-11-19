@@ -73,17 +73,34 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
 }
 
 class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory): Player {
+
     private val log = LoggerFactory.getLogger(ExploratoryPlayerWithoutEndNode::class.java)
+
     override var feedback: InvalidMoveException? = null
     private val spiralCoordinateIterator = SpiralCoordinateIterator()
     private var startCoordinate = Coordinate(0, 0)
-
+    private var endCoordinate = startCoordinate
+    private var previousEndCoordinateInaccessible = false
     override fun chooseNextMove(): Action {
         val surrounding = actor.getSurrounding()
         memory.furnishMemoryWithSurrounding(surrounding)
         startCoordinate = surrounding.positionFor(actor)
-        val nextCoordinate: Coordinate = getNextCoordinate(surrounding)
-        return bfsToEndNode(startCoordinate, nextCoordinate)
+        while(true) {
+            if (previousEndCoordinateInaccessible == true || endCoordinate == startCoordinate || memory.getNode(endCoordinate) !is OpenSpaceNode) {
+                endCoordinate = getNextCoordinate(surrounding)
+                previousEndCoordinateInaccessible = false
+            }
+            return try {
+                bfsToEndNode(startCoordinate, endCoordinate)
+            } catch (ex: IllegalStateException) {
+                if (memory.getNode(endCoordinate) is ExitNode) {
+                    throw IllegalStateException("ExitNode is inaccessible")
+                } else {
+                    previousEndCoordinateInaccessible = true
+                    continue
+                }
+            }
+        }
     }
 
     private fun getNextCoordinate(surrounding: WorldMap): Coordinate {
@@ -104,6 +121,7 @@ class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val mem
     }
 
     private fun bfsToEndNode(start: Coordinate, end: Coordinate): Action {
+        log.info("$start $end")
         val distances = HashMap<Coordinate, Int>()
         val queue  = LinkedList<Coordinate>()
         queue.add(start)
@@ -124,6 +142,7 @@ class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val mem
         }
         var curr = end
         while (distances[curr] != 1) {
+            log.info("$distances $curr")
             val currDistance = distances[curr] ?: throw IllegalStateException()
             for (neighbour in neighboursOf(curr)) {
                 val neighbourDist = distances[neighbour] ?: throw IllegalStateException()
