@@ -73,6 +73,7 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
 }
 
 class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory): Player {
+
     private val log = LoggerFactory.getLogger(ExploratoryPlayerWithoutEndNode::class.java)
 
     override var feedback: InvalidMoveException? = null
