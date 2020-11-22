@@ -6,6 +6,7 @@ import exception.InvalidMoveException
 import map.Coordinate
 import map.ExitNode
 import map.WorldMap
+import output.SendGameData
 
 class Game(
         private val player: Player,
@@ -15,9 +16,11 @@ class Game(
     private var timeCounter: Int = 0
 
     fun run() {
+        val turns = ArrayList<Coordinate>()
         while (!Thread.interrupted()) {
             try {
                 val presentCoordinate = worldMap.positionFor(player.actor)
+                turns.add(presentCoordinate)
                 if (!player.actor.alive || worldMap.getNode(presentCoordinate) is ExitNode) {
                     break
                 }
@@ -34,6 +37,7 @@ class Game(
                 player.receiveFeedback(ex)
             }
         }
+        SendGameData().sendGameData(worldMap, radius, turns)
     }
 
     private fun validateRules(move: Move, presentCoordinate: Coordinate) {
