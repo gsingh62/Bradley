@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.1.0</version>
+            <version>3.11.4</version>
         </dependency>
     </dependencies>
 
@@ -115,7 +115,7 @@
             <plugin>
                 <groupId>com.github.os72</groupId>
                 <artifactId>protoc-jar-maven-plugin</artifactId>
-                <version>3.1.0.1</version>
+                <version>3.11.4</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -123,11 +123,11 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <protocVersion>3.1.0</protocVersion>
+                            <protocVersion>3.11.2</protocVersion>
                             <inputDirectories>
-                                <include>/Users/gayatrisingh/Bradley/BradleyInterface</include>
+                                <include>${project.basedir}/BradleyInterface</include>
                             </inputDirectories>
-                            <outputDirectory>/Users/gayatrisingh/Bradley/src</outputDirectory>
+                            <outputDirectory>${project.basedir}/src</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

@@ -41,9 +41,8 @@ class SendGameData {
                     )
             )
         }
-        val output = FileOutputStream(File("/Users/gayatrisingh/Bradley/src/output/game_data.txt"))
-        // gameData.build().writeTo(output)
-        output.write(gameData.toString().toByteArray())
+        val output = FileOutputStream(File("./bradleygame.pb"))
+        gameData.build().writeTo(output)
         output.close()
     }
 }

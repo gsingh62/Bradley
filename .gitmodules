@@ -1,0 +1,3 @@
+[submodule "BradleyInterface"]
+	path = BradleyInterface
+	url = https://github.com/gsingh62/BradleyInterface.git
