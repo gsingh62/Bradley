@@ -60,7 +60,7 @@ class TeleportingPlayer(override val actor: Actor): Player {
     }
 }
 
-class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private val d: Double = 1.0) {
+class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private val d: Double = 2.0, private val start: Coordinate) {
     var n = 0
     fun getNextSpiralCoordinate(): Coordinate {
         val t = sqrt(2.0 * d * n++ / r)
@@ -68,25 +68,24 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
 
         val x =  rt * cos(t)
         val y =  rt * sin(t)
-        return Coordinate(x.toInt(), y.toInt())
+        return Coordinate(x.toInt() + start.x, y.toInt() + start.y)
     }
 }
 
-class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory): Player {
+class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory, private var startCoordinate: Coordinate): Player {
 
     private val log = LoggerFactory.getLogger(ExploratoryPlayerWithoutEndNode::class.java)
 
     override var feedback: InvalidMoveException? = null
-    private val spiralCoordinateIterator = SpiralCoordinateIterator()
-    private var startCoordinate = Coordinate(0, 0)
     private var endCoordinate = startCoordinate
+    private val spiralCoordinateIterator = SpiralCoordinateIterator(start = startCoordinate)
     private var previousEndCoordinateInaccessible = false
     override fun chooseNextMove(): Action {
         val surrounding = actor.getSurrounding()
         memory.furnishMemoryWithSurrounding(surrounding)
         startCoordinate = surrounding.positionFor(actor)
         while(true) {
-            if (previousEndCoordinateInaccessible == true || endCoordinate == startCoordinate || memory.getNode(endCoordinate) !is OpenSpaceNode) {
+            if (previousEndCoordinateInaccessible || endCoordinate == startCoordinate || memory.getNode(endCoordinate) !is OpenSpaceNode) {
                 endCoordinate = getNextCoordinate(surrounding)
                 previousEndCoordinateInaccessible = false
             }
