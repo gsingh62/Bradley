@@ -10,7 +10,6 @@ import map.Node
 import map.OpenSpaceNode
 import map.Vector
 import map.WorldMap
-import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -60,11 +59,11 @@ class TeleportingPlayer(override val actor: Actor): Player {
     }
 }
 
-class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private val d: Double = 2.0, private val start: Coordinate) {
+class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private val d: Double = 1.0, private val start: Coordinate) {
     var n = 0
     fun getNextSpiralCoordinate(): Coordinate {
         val t = sqrt(2.0 * d * n++ / r)
-        val rt = r * t
+        val rt = 2 * r * t
 
         val x =  rt * cos(t)
         val y =  rt * sin(t)
@@ -72,9 +71,141 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
     }
 }
 
-class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory, private var startCoordinate: Coordinate): Player {
+class SquareSpiralIterator(start: Coordinate) {
+    var layer = 2
+    var startX = start.x
+    var startY = start.y
+    private var previousCoordinate = start
+    private var dir = Direction.RIGHT
 
-    private val log = LoggerFactory.getLogger(ExploratoryPlayerWithoutEndNode::class.java)
+    enum class Direction { RIGHT, LEFT, UP, DOWN }
+
+    fun getNextSquareSpiralCoordinate(): Coordinate {
+        var x = previousCoordinate.x
+        var y = previousCoordinate.y
+        when (dir) {
+            Direction.RIGHT -> if (x == startX + layer) {
+                dir = Direction.UP
+            }
+            Direction.UP -> if (y == startY - layer) {
+                dir = Direction.LEFT
+            }
+            Direction.LEFT -> if (x == startX - layer) {
+                layer+=3
+                dir = Direction.DOWN
+            }
+            Direction.DOWN -> if (y == layer + startY) {
+                dir = Direction.RIGHT
+            }
+        }
+        when (dir) {
+            Direction.RIGHT -> x++
+            Direction.UP -> y--
+            Direction.LEFT -> x--
+            Direction.DOWN -> y++
+        }
+        previousCoordinate = Coordinate(x, y)
+        return previousCoordinate
+    }
+}
+
+class BeatAlexey368(override val actor: Actor, private val memory: Memory, private var startCoordinate: Coordinate): Player {
+    override var feedback: InvalidMoveException? = null
+    private var endCoordinate = startCoordinate
+    private val spiralCoordinateIterator = SquareSpiralIterator(start = startCoordinate)
+    private var previousEndCoordinateInaccessible = false
+    override fun chooseNextMove(): Action {
+        val surrounding = actor.getSurrounding()
+        memory.furnishMemoryWithSurrounding(surrounding)
+        startCoordinate = surrounding.positionFor(actor)
+        while(true) {
+            if (previousEndCoordinateInaccessible ||
+                    endCoordinate == startCoordinate ||
+                    memory.getNode(endCoordinate) !is OpenSpaceNode
+            ) {
+                endCoordinate = getNextCoordinate(surrounding)
+                previousEndCoordinateInaccessible = false
+            }
+            return try {
+                println ( "Start Coordinate: $startCoordinate, End Coordinate: $endCoordinate" )
+                bfsToEndNode(startCoordinate, endCoordinate)
+            } catch (ex: IllegalStateException) {
+                if (memory.getNode(endCoordinate) is ExitNode) {
+                    throw IllegalStateException("ExitNode is inaccessible")
+                } else {
+                    previousEndCoordinateInaccessible = true
+                    println ( "Start Coordinate: $startCoordinate, End Coordinate: $endCoordinate" )
+                    continue
+                }
+            }
+        }
+    }
+
+    private fun getNextCoordinate(surrounding: WorldMap): Coordinate {
+        for(coordinate in surrounding.getAllCoordinates()) {
+            if (surrounding.getNode(coordinate) is ExitNode)
+                return coordinate
+        }
+        while(true) {
+            val nextCoordinate = spiralCoordinateIterator.getNextSquareSpiralCoordinate()
+            if (!memory.isNodeVisited(nextCoordinate) &&
+                    memory.getAllCoordinates().contains(nextCoordinate) &&
+                    nextCoordinate != startCoordinate &&
+                    memory.getNode(nextCoordinate) is OpenSpaceNode) {
+                return nextCoordinate
+            }
+        }
+    }
+
+    private fun bfsToEndNode(start: Coordinate, end: Coordinate): Action {
+        val distances = HashMap<Coordinate, Int>()
+        val queue  = LinkedList<Coordinate>()
+        queue.add(start)
+        distances[start] = 0
+        while(queue.isNotEmpty()) {
+            val curr = queue.removeFirst()
+            val currDistance = distances[curr] ?: throw IllegalStateException()
+            for (neighbour in neighboursOf(curr)) {
+                if (distances[neighbour] == null) {
+                    distances[neighbour] = currDistance + 1
+                    queue.add(neighbour)
+
+                    if (end == neighbour) {
+                        break
+                    }
+                }
+            }
+        }
+        var curr = end
+        while (distances[curr] != 1) {
+            val currDistance = distances[curr] ?: throw IllegalStateException()
+            for (neighbour in neighboursOf(curr)) {
+                val neighbourDist = distances[neighbour] ?: throw IllegalStateException()
+                if (neighbourDist == currDistance-1) {
+                    curr = neighbour
+                    break
+                }
+            }
+        }
+        memory.markNodeVisited(curr)
+        return Move(Vector(curr.x - start.x, curr.y - start.y))
+    }
+
+    private fun neighboursOf(coordinate: Coordinate): Set<Coordinate> {
+        val neighbours = HashSet<Coordinate>()
+        for (potential in memory.getAllCoordinates()) {
+            if (memory.getNode(potential) is OpenSpaceNode) {
+                if (abs(potential.x - coordinate.x) <= 1 &&
+                        abs(potential.y - coordinate.y) <= 1 && potential != coordinate) {
+                    neighbours.add(potential)
+                }
+            }
+        }
+        return neighbours
+    }
+}
+
+class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val memory: Memory, private var startCoordinate: Coordinate): Player {
 
     override var feedback: InvalidMoveException? = null
     private var endCoordinate = startCoordinate
@@ -113,14 +244,12 @@ class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val mem
                     memory.getAllCoordinates().contains(nextCoordinate) &&
                     nextCoordinate != startCoordinate &&
                     memory.getNode(nextCoordinate) is OpenSpaceNode) {
-                log.info("coordinate {} {}", nextCoordinate.x, nextCoordinate.y)
                 return nextCoordinate
             }
         }
     }
 
     private fun bfsToEndNode(start: Coordinate, end: Coordinate): Action {
-        log.info("$start $end")
         val distances = HashMap<Coordinate, Int>()
         val queue  = LinkedList<Coordinate>()
         queue.add(start)
@@ -141,7 +270,6 @@ class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val mem
         }
         var curr = end
         while (distances[curr] != 1) {
-            log.info("$distances $curr")
             val currDistance = distances[curr] ?: throw IllegalStateException()
             for (neighbour in neighboursOf(curr)) {
                 val neighbourDist = distances[neighbour] ?: throw IllegalStateException()
@@ -152,7 +280,6 @@ class ExploratoryPlayerWithoutEndNode(override val actor: Actor, private val mem
             }
         }
         memory.markNodeVisited(curr)
-        log.info("visiting {} {}", curr.x, curr.y)
         return Move(Vector(curr.x - start.x, curr.y - start.y))
     }
 
