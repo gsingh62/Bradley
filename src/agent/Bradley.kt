@@ -27,6 +27,8 @@ interface Player {
     }
 }
 
+/**
+
 class GeneralPlayer(override val actor: Actor): Player {
     private val options = listOf(Vector(1,-1), Vector(1,0), Vector(1, 1),
     Vector(0,1),Vector(-1, 1), Vector(-1, 0), Vector(-1, -1),
@@ -42,6 +44,7 @@ class GeneralPlayer(override val actor: Actor): Player {
         return Move(options[previousActionIndex])
     }
 }
+**/
 
 class AlwaysGoUpPlayer(override val actor: Actor): Player {
     override var feedback: InvalidMoveException? = null
@@ -72,30 +75,66 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
 }
 
 class SquareSpiralIterator(start: Coordinate) {
-    var layer = 2
+    var layer = 1
     var startX = start.x
     var startY = start.y
     private var previousCoordinate = start
     private var dir = Direction.RIGHT
-
+    private var jiggleDone = 0
+    private var turns = 0
+    private var previousJiggleCoordinate = start
+    private  var midJiggleCoordinate = previousJiggleCoordinate
     enum class Direction { RIGHT, LEFT, UP, DOWN }
 
     fun getNextSquareSpiralCoordinate(): Coordinate {
+        turns++
         var x = previousCoordinate.x
         var y = previousCoordinate.y
         when (dir) {
             Direction.RIGHT -> if (x == startX + layer) {
+                if (jiggleDone <= 4) {
+                    previousJiggleCoordinate = jiggle(Direction.RIGHT, previousCoordinate)
+                    if (jiggleDone == 1) {
+                        midJiggleCoordinate = previousJiggleCoordinate
+                    }
+                    return previousJiggleCoordinate
+                }
                 dir = Direction.UP
+                jiggleDone = 0
             }
             Direction.UP -> if (y == startY - layer) {
+                if (jiggleDone <= 4) {
+                    previousJiggleCoordinate = jiggle(Direction.UP, previousCoordinate)
+                    if (jiggleDone == 1) {
+                        midJiggleCoordinate = previousJiggleCoordinate
+                    }
+                    return previousJiggleCoordinate
+                }
                 dir = Direction.LEFT
+                jiggleDone = 0
             }
             Direction.LEFT -> if (x == startX - layer) {
-                layer+=3
+                if (jiggleDone <=  4 ) {
+                    previousJiggleCoordinate = jiggle(Direction.LEFT, previousCoordinate)
+                    if (jiggleDone == 1) {
+                        midJiggleCoordinate = previousJiggleCoordinate
+                    }
+                    return previousJiggleCoordinate
+                }
+                layer += 5
                 dir = Direction.DOWN
+                jiggleDone = 0
             }
             Direction.DOWN -> if (y == layer + startY) {
+                if (jiggleDone <= 4) {
+                    previousJiggleCoordinate = jiggle(Direction.DOWN, previousCoordinate)
+                    if (jiggleDone == 1) {
+                        midJiggleCoordinate = previousJiggleCoordinate
+                    }
+                    return previousJiggleCoordinate
+                }
                 dir = Direction.RIGHT
+                jiggleDone = 0
             }
         }
         when (dir) {
@@ -106,6 +145,26 @@ class SquareSpiralIterator(start: Coordinate) {
         }
         previousCoordinate = Coordinate(x, y)
         return previousCoordinate
+    }
+
+    private fun jiggle(direction: Direction, previousCoordinate: Coordinate): Coordinate {
+        jiggleDone++
+        if(jiggleDone == 1) {
+            previousJiggleCoordinate = previousCoordinate
+        }
+        return if (jiggleDone == 4)
+            previousCoordinate
+        else if (jiggleDone == 3)
+            midJiggleCoordinate
+
+        else {
+            when(direction) {
+                Direction.DOWN -> Coordinate(previousJiggleCoordinate.x - 1, previousJiggleCoordinate.y + 1)
+                Direction.RIGHT -> Coordinate(previousJiggleCoordinate.x + 1, previousJiggleCoordinate.y + 1)
+                Direction.LEFT -> Coordinate(previousJiggleCoordinate.x - 1, previousJiggleCoordinate.y  - 1)
+                Direction.UP -> Coordinate(previousJiggleCoordinate.x + 1, previousJiggleCoordinate.y  - 1)
+            }
+        }
     }
 }
 
