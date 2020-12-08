@@ -74,96 +74,33 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
     }
 }
 
-class SquareSpiralIterator(start: Coordinate) {
-    var layer = 1
-    var startX = start.x
-    var startY = start.y
-    private var previousCoordinate = start
-    private var dir = Direction.RIGHT
-    private var jiggleDone = 0
-    private var turns = 0
-    private var previousJiggleCoordinate = start
-    private  var midJiggleCoordinate = previousJiggleCoordinate
-    enum class Direction { RIGHT, LEFT, UP, DOWN }
+class SquareSpiralIterator(private val start: Coordinate) {
+
+    private var i: Int = 1
+    private var j: Int = 0
 
     fun getNextSquareSpiralCoordinate(): Coordinate {
-        turns++
-        var x = previousCoordinate.x
-        var y = previousCoordinate.y
-        when (dir) {
-            Direction.RIGHT -> if (x == startX + layer) {
-                if (jiggleDone <= 4) {
-                    previousJiggleCoordinate = jiggle(Direction.RIGHT, previousCoordinate)
-                    if (jiggleDone == 1) {
-                        midJiggleCoordinate = previousJiggleCoordinate
-                    }
-                    return previousJiggleCoordinate
-                }
-                dir = Direction.UP
-                jiggleDone = 0
-            }
-            Direction.UP -> if (y == startY - layer) {
-                if (jiggleDone <= 4) {
-                    previousJiggleCoordinate = jiggle(Direction.UP, previousCoordinate)
-                    if (jiggleDone == 1) {
-                        midJiggleCoordinate = previousJiggleCoordinate
-                    }
-                    return previousJiggleCoordinate
-                }
-                dir = Direction.LEFT
-                jiggleDone = 0
-            }
-            Direction.LEFT -> if (x == startX - layer) {
-                if (jiggleDone <=  4 ) {
-                    previousJiggleCoordinate = jiggle(Direction.LEFT, previousCoordinate)
-                    if (jiggleDone == 1) {
-                        midJiggleCoordinate = previousJiggleCoordinate
-                    }
-                    return previousJiggleCoordinate
-                }
-                layer += 5
-                dir = Direction.DOWN
-                jiggleDone = 0
-            }
-            Direction.DOWN -> if (y == layer + startY) {
-                if (jiggleDone <= 4) {
-                    previousJiggleCoordinate = jiggle(Direction.DOWN, previousCoordinate)
-                    if (jiggleDone == 1) {
-                        midJiggleCoordinate = previousJiggleCoordinate
-                    }
-                    return previousJiggleCoordinate
-                }
-                dir = Direction.RIGHT
-                jiggleDone = 0
-            }
+        val base: Coordinate = when (i%4) {
+            2 -> start
+            1 -> Coordinate(start.x, start.y+5)
+            0,3 -> Coordinate(start.x, start.y+2)
+            else -> throw RuntimeException("invalid i state")
         }
-        when (dir) {
-            Direction.RIGHT -> x++
-            Direction.UP -> y--
-            Direction.LEFT -> x--
-            Direction.DOWN -> y++
+        val dir: Coordinate = when (i%4) {
+            0 -> Coordinate(-1, -1)
+            1 -> Coordinate(-1, 1)
+            2 -> Coordinate(1, 1)
+            3 -> Coordinate(1, -1)
+            else -> throw RuntimeException("invalid i state")
         }
-        previousCoordinate = Coordinate(x, y)
-        return previousCoordinate
-    }
+        val m = (i+2)/4
+        val shifted = Coordinate(base.x+dir.x*5*m, base.y+dir.y*5*m)
 
-    private fun jiggle(direction: Direction, previousCoordinate: Coordinate): Coordinate {
-        jiggleDone++
-        if(jiggleDone == 1) {
-            previousJiggleCoordinate = previousCoordinate
-        }
-        return if (jiggleDone == 4)
-            previousCoordinate
-        else if (jiggleDone == 3)
-            midJiggleCoordinate
-
-        else {
-            when(direction) {
-                Direction.DOWN -> Coordinate(previousJiggleCoordinate.x - 1, previousJiggleCoordinate.y + 1)
-                Direction.RIGHT -> Coordinate(previousJiggleCoordinate.x + 1, previousJiggleCoordinate.y + 1)
-                Direction.LEFT -> Coordinate(previousJiggleCoordinate.x - 1, previousJiggleCoordinate.y  - 1)
-                Direction.UP -> Coordinate(previousJiggleCoordinate.x + 1, previousJiggleCoordinate.y  - 1)
-            }
+        when (j) {
+            0 -> { j++; return shifted; }
+            1 -> { j++; return Coordinate(shifted.x+dir.x, shifted.y+dir.y) }
+            2 -> { i++; j=0; return shifted; }
+            else -> throw RuntimeException("invalid j state")
         }
     }
 }
@@ -207,14 +144,36 @@ class BeatAlexey368(override val actor: Actor, private val memory: Memory, priva
         }
         while(true) {
             val nextCoordinate = spiralCoordinateIterator.getNextSquareSpiralCoordinate()
+
             if (!memory.isNodeVisited(nextCoordinate) &&
                     memory.getAllCoordinates().contains(nextCoordinate) &&
                     nextCoordinate != startCoordinate &&
                     memory.getNode(nextCoordinate) is OpenSpaceNode) {
                 return nextCoordinate
             }
+
+            var minc: Coordinate? = null
+            var mindist2: Int = Int.MAX_VALUE
+            for (c in memory.getAllCoordinates()) {
+                if (!memory.isNodeVisited(c)) {
+                    var dist2 = square(nextCoordinate.x-c.x) + square(nextCoordinate.y-c.y)
+                    if (dist2<mindist2) {
+                        mindist2 = dist2
+                        minc = c
+                    }
+                }
+            }
+
+            if (minc!=null) {
+                return minc
+            }
+
+            throw RuntimeException("all explored")
         }
     }
+
+    private fun square(i: Int): Int =
+            i*i
 
     private fun bfsToEndNode(start: Coordinate, end: Coordinate): Action {
         val distances = HashMap<Coordinate, Int>()
@@ -250,14 +209,22 @@ class BeatAlexey368(override val actor: Actor, private val memory: Memory, priva
         return Move(Vector(curr.x - start.x, curr.y - start.y))
     }
 
-    private fun neighboursOf(coordinate: Coordinate): Set<Coordinate> {
-        val neighbours = HashSet<Coordinate>()
-        for (potential in memory.getAllCoordinates()) {
-            if (memory.getNode(potential) is OpenSpaceNode) {
-                if (abs(potential.x - coordinate.x) <= 1 &&
-                        abs(potential.y - coordinate.y) <= 1 && potential != coordinate) {
-                    neighbours.add(potential)
-                }
+    private fun neighboursOf(c: Coordinate): Set<Coordinate> {
+        val candidates = ArrayList<Coordinate>().apply {
+            add(Coordinate(c.x-1, c.y))
+            add(Coordinate(c.x+1, c.y))
+            add(Coordinate(c.x, c.y-1))
+            add(Coordinate(c.x, c.y+1))
+            add(Coordinate(c.x-1, c.y-1))
+            add(Coordinate(c.x+1, c.y+1))
+            add(Coordinate(c.x+1, c.y-1))
+            add(Coordinate(c.x-1, c.y+1))
+        }
+
+        val neighbours = LinkedHashSet<Coordinate>()
+        for (cc in candidates) {
+            if (memory.getAllCoordinates().contains(cc)) {
+                neighbours.add(cc)
             }
         }
         return neighbours
