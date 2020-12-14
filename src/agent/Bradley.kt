@@ -75,33 +75,47 @@ class SpiralCoordinateIterator(private val r: Double = 0.5 / Math.PI, private va
 }
 
 class SquareSpiralIterator(private val start: Coordinate) {
+    fun getNext(turn: Int): Coordinate {
+        return nextjj(turn)
+    }
 
-    private var i: Int = 1
-    private var j: Int = 0
+    fun next(n : Int): Coordinate {
+        val base = base(n)
+        val dir = dir(n)
+        val shift = shift(n)
+        return Coordinate(start.x + base.x + dir.x * shift * 5, start.y + base.y + dir.y * shift * 5)
+    }
 
-    fun getNextSquareSpiralCoordinate(): Coordinate {
-        val base: Coordinate = when (i%4) {
-            2 -> start
-            1 -> Coordinate(start.x, start.y+5)
-            0,3 -> Coordinate(start.x, start.y+2)
-            else -> throw RuntimeException("invalid i state")
-        }
-        val dir: Coordinate = when (i%4) {
-            0 -> Coordinate(-1, -1)
-            1 -> Coordinate(-1, 1)
-            2 -> Coordinate(1, 1)
-            3 -> Coordinate(1, -1)
-            else -> throw RuntimeException("invalid i state")
-        }
-        val m = (i+2)/4
-        val shifted = Coordinate(base.x+dir.x*5*m, base.y+dir.y*5*m)
+    private fun nextjj(i: Int): Coordinate {
+        val n = i/3
+        val nn = next(n)
+        val dir = dir(n)
+        val j = i % 3
+        if (j == 1)
+            return Coordinate(nn.x + dir.x, nn.y + dir.y)
+        else return nn
+    }
 
-        when (j) {
-            0 -> { j++; return shifted; }
-            1 -> { j++; return Coordinate(shifted.x+dir.x, shifted.y+dir.y) }
-            2 -> { i++; j=0; return shifted; }
-            else -> throw RuntimeException("invalid j state")
+    private fun base(n: Int): Coordinate {
+        return if (n % 4 == 1)
+            Coordinate (-5, 0)
+        else Coordinate(0, 0)
+    }
+
+    private fun dir(n: Int): Coordinate {
+        return if (n % 4 == 0) {
+            Coordinate(1, -1)
+        } else if (n % 4 == 1) {
+            Coordinate(-1, -1)
+        } else if (n % 4 == 2) {
+            Coordinate(-1, 1)
+        } else {
+            Coordinate(1, 1)
         }
+    }
+
+    private fun shift(n: Int): Int {
+        return (n + 2)/4
     }
 }
 
@@ -110,12 +124,13 @@ class BeatAlexey368(override val actor: Actor, private val memory: Memory, priva
     private var endCoordinate = startCoordinate
     private val spiralCoordinateIterator = SquareSpiralIterator(start = startCoordinate)
     private var previousEndCoordinateInaccessible = false
+    private var turn = 0
     override fun chooseNextMove(): Action {
         val surrounding = actor.getSurrounding()
         memory.furnishMemoryWithSurrounding(surrounding)
         startCoordinate = surrounding.positionFor(actor)
         while(true) {
-            if (previousEndCoordinateInaccessible ||
+            while (previousEndCoordinateInaccessible ||
                     endCoordinate == startCoordinate ||
                     memory.getNode(endCoordinate) !is OpenSpaceNode
             ) {
@@ -143,7 +158,7 @@ class BeatAlexey368(override val actor: Actor, private val memory: Memory, priva
                 return coordinate
         }
         while(true) {
-            val nextCoordinate = spiralCoordinateIterator.getNextSquareSpiralCoordinate()
+            val nextCoordinate = spiralCoordinateIterator.getNext(turn++)
 
             if (!memory.isNodeVisited(nextCoordinate) &&
                     memory.getAllCoordinates().contains(nextCoordinate) &&
