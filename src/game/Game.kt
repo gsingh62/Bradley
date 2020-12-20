@@ -44,4 +44,3 @@ class Game(
         worldMap.getWorldRules().worldRulesList.forEach { it(move, presentCoordinate)?.let{ throw it } }
     }
 }
-

@@ -27,8 +27,6 @@ interface Player {
     }
 }
 
-/**
-
 class GeneralPlayer(override val actor: Actor): Player {
     private val options = listOf(Vector(1,-1), Vector(1,0), Vector(1, 1),
     Vector(0,1),Vector(-1, 1), Vector(-1, 0), Vector(-1, -1),
@@ -44,7 +42,6 @@ class GeneralPlayer(override val actor: Actor): Player {
         return Move(options[previousActionIndex])
     }
 }
-**/
 
 class AlwaysGoUpPlayer(override val actor: Actor): Player {
     override var feedback: InvalidMoveException? = null

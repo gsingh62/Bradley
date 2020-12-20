@@ -4,6 +4,7 @@ import agent.AlwaysGoUpPlayer
 import agent.BFSPlayerGayatri
 import agent.BeatAlexey368
 import agent.ExploratoryPlayerWithEndNode
+import agent.GeneralPlayer
 import agent.Memory
 import agent.TeleportingPlayer
 import exception.HitWallException
@@ -60,7 +61,7 @@ class TestKeepsGoingUp {
         assertNotEquals(map.positionFor(actor), exitPosition)
         assertTrue(player.feedback is HitWallException)
     }
-/**
+
     @Test
     fun testNavigatesWallAndWins() {
         val builder = WorldMapBuilder()
@@ -80,7 +81,7 @@ class TestKeepsGoingUp {
         assertEquals(exitPosition, map.positionFor(actor))
         assertEquals(true, actor.alive)
     }
-*/
+
     @Test
     fun testDoesntWinWithGameRulesBeingViolated() {
         val builder = WorldMapBuilder()

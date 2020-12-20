@@ -103,7 +103,7 @@ class WorldMapBuilder {
             val coordinate = Coordinate(x, y)
             val node = when(s[i]) {
                 's' ->  {
-                    startingActor = Actor(Int.MAX_VALUE)
+                    startingActor = Actor(1000)
                     OpenSpaceNode().apply { addObject(startingActor) }
                 }
                 'e' -> {
